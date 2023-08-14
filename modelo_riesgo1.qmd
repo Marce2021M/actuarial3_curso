@@ -1,0 +1,83 @@
+---
+title: "Modelos de Riesgos"
+subtitle: "Actuarial 3"
+lang: es
+author: "Marcelino Sánchez"
+date: today
+format:
+  html:
+    page-layout: full
+    embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+#library(rgl)
+#knitr::opts_chunk$set(echo = TRUE, fig.align = "center")
+#knitr::knit_hooks$set(webgl = hook_webgl)
+```
+
+# Modelos de Riesgos
+
+## Modelos de Riesgo Colectivo
+
+Suponga que $X_{1}, X_{2},...$ son variables aleatorias iid de los montos de las reclamaciones de un portafolio de riesgos homogéneos, y que $N$ es la variable aleatoria del número de reclamaciones de dicho portafolio. La suma aleatoria $S = X_{1} + X_{2} +...+ X_{N}$ representa el monto agregado de reclamaciones generado por este portafolio. $N$ es independiente de $X_{1}, X_{2},...$
+
+### Ejercicio 1 de clase
+
+Se sabe que el monto de las reclamaciones del seguro de autos de cierto modelo específico es Gamma con media 27 mil pesos y desviación estándar de 9 mil pesos, que se suscribieron 800 pólizas de este seguro y que la probabilidad de que cada asegurado presente una reclamación es de 0.3. Si se define la prima neta agregada ( Π) como el valor esperado del monto agregado de las reclamaciones. Nota: Checar notas de Ipad Calcule la probabilidad de que durante la vigencia de este seguro de autos la Aseguradora tenga que pagar más de 7 millones de pesos.
+
+Es decir, nos piden $P(S>7000)$, donde $S=\sum_{i=1}^{N}X_{i}$, N se distribuye como una binomial con parametros $n=800$ y $p=0.3$ y $X_{i}$ se distribuye como una gamma con parametros $\alpha$ y $\beta$. Los parámetros los calcularemos en un momento.
+
+```{r}
+mediaDistPerd <- 27
+
+varDistPerd <- 9^2
+
+beta <- mediaDistPerd/varDistPerd
+
+alfa <- mediaDistPerd*beta
+
+nPolizas <- 800
+
+pReclamo <- 0.3
+
+supervivenciaMonto <- 7000
+
+
+supervivenciaFuncS <- function(supervivenciaMonto,nPolizas, pReclamo,alfa, beta ){
+    p = 0
+    for (n in 1:nPolizas){p=p+dbinom(n,nPolizas,pReclamo)*(1-pgamma(supervivenciaMonto,shape=alfa*n,scale=1/beta))}
+    return(p)
+}
+
+# Resultado esperado
+supervivenciaFuncS(supervivenciaMonto,nPolizas, pReclamo,alfa, beta )
+
+```
+
+### Ejercicio 1 de la tarea
+
+Se sabe que el monto de las reclamaciones de un seguro de crédito es Exponencial
+con media de 80 mil pesos, y que el número de reclamaciones de cada uno de los 48
+asegurado (Nj) es ( )Po
+λ e independiente de los demás. En este seguro cada
+asegurado puede hacer más de una reclamación, pero la probabilidad de ese evento es
+de sólo 0.0265. La prima recargada agregada (bajo el principio de la desviación
+estándar) se define por [ ] [ ]E S S
+α
+ασΠ = + , donde 0
+α ≥ es el margen de seguridad.
+
+ii) ¿Cuál es la prima recargada individual que se debe cobrar a cada asegurado si
+se considera un margen de seguridad de 0.5? ¿Cómo se compara frente a la
+respectiva prima neta individual? [10]
+iii) Aproxime la distribución de S mediante el Teorema Central del Límite para
+encontrar el margen de seguridad que garantice con 99.5% de probabilidad que
+la prima recargada agregada será suficiente para hacer frente a las obligaciones
+de este seguro. ¿Cuál sería la prima recargada individual en este caso? [10]
+
+```{r}
+
+```
