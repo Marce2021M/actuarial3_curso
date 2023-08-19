@@ -1,0 +1,97 @@
+---
+title: "Actuarial 3 Tarea 1"
+subtitle: "Actuarial 3"
+lang: es
+author: "Marcelino Sánchez"
+date: today
+format:
+  html:
+    page-layout: full
+    embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Ejercicio 1
+
+Se sabe que el monto de las reclamaciones de un seguro de crédito es Exponencial
+con media de 80 mil pesos, y que el número de reclamaciones de cada uno de los 48
+asegurado (Nj) es ( )Po
+λ e independiente de los demás. En este seguro cada
+asegurado puede hacer más de una reclamación, pero la probabilidad de ese evento es
+de sólo 0.0265. La prima recargada agregada (bajo el principio de la desviación
+estándar) se define por [ ] [ ]E S S
+α
+ασΠ = + , donde 0
+α ≥ es el margen de seguridad.
+
+ii) ¿Cuál es la prima recargada individual que se debe cobrar a cada asegurado si
+se considera un margen de seguridad de 0.5? ¿Cómo se compara frente a la
+respectiva prima neta individual? [10]
+
+```{r}
+mediaDistPerd <- 80
+
+varDistPerd <- 80^2
+
+# Averiguando valor de lambda
+
+funcionLambda <- function(lambda){
+  return((1+lambda)*exp(-lambda)-1+.0265)
+}
+
+# Encontrar la raíz usando uniroot
+resultado <- uniroot(funcionLambda, interval = c(0, 1))
+
+# Imprimir el resultado
+cat("El valor de lambda que hace que la función sea aproximadamente cero es:", resultado$root, "\n")
+
+#Prima recargada
+
+mediaDistFrec <- 48*resultado$root
+
+vardDistFrec <- 48*resultado$root
+
+esperanzaS <- mediaDistPerd*mediaDistFrec
+
+varianzaS <- varDistPerd*mediaDistFrec + vardDistFrec*mediaDistPerd^2
+
+paramRecargada <- 0.5
+
+primaRecargada <- 1000*(esperanzaS+paramRecargada*sqrt(varianzaS))/48
+
+cat("La prima recargada agregada es:",primaRecargada , "\n")
+
+cat("La prima recargada individual es:", (primaRecargada/48)*1000, "\n")
+
+primaNetaIndividual <-  (esperanzaS/48)*1000
+
+cat("La prima neta individual es:", primaNetaIndividual, "\n")
+
+cat("Con lo cual la recargada es ",primaRecargada/primaNetaIndividual, " veces la neta", "\n" )
+
+```
+
+
+
+iii) Aproxime la distribución de S mediante el Teorema Central del Límite para
+encontrar el margen de seguridad que garantice con 99.5% de probabilidad que
+la prima recargada agregada será suficiente para hacer frente a las obligaciones
+de este seguro. ¿Cuál sería la prima recargada individual en este caso? [10]
+
+```{r}
+# Aproximación de la distribución de S mediante el TCL
+
+# Ya tenemos la media y varianza de S
+
+# Calculamos la alfa que nos da el 99.5% de seguridad
+
+alfa <- qnorm(0.995)
+
+# Calculamos la prima recargada
+
+(primaRecargada <- (esperanzaS+alfa*sqrt(varianzaS))*1000)
+
+(primaRecargadaInd <- (primaRecargada/48))
+```
+
