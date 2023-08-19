@@ -95,3 +95,30 @@ alfa <- qnorm(0.995)
 (primaRecargadaInd <- (primaRecargada/48))
 ```
 
+# Ejercicio 2
+
+```{r}
+# Cargamos librerías
+
+library(readxl)
+library(openxlsx)
+library(lubridate)
+library(dplyr)  # Load the dplyr package for data manipulation
+
+```
+
+
+```{r cargando datos_1}
+# Set the path to the Excel file and the sheet name
+
+file_path <- paste0(getwd(), "/bases/Tarea1.xlsx")
+sheet_name <- "2"
+
+# Read the entire sheet into a data frame
+sheet <- read_excel(file_path, sheet = sheet_name, range = "A7:D421")
+
+# Print the table
+head(sheet)
+summary(sheet)
+
+```
