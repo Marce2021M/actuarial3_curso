@@ -122,6 +122,7 @@ sheet <- read_excel(file_path, sheet = sheet_name, range = "A7:D427")
 # Extract year and month from the Fecha column
 sheet$Month <- lubridate::month(sheet$Fecha)
 sheet$Year <- lubridate::year(sheet$Fecha)
+sheet$Day <- lubridate::day(sheet$Fecha)
 
 sheet$Year <- as.factor(sheet$Year)
 sheet$Month <- as.factor(sheet$Month)
@@ -192,6 +193,27 @@ ggplot(sheet, aes(x = Monto)) +
 
 d) Se quiere analizar exclusivamente el ramo Catastrófico de 2020 a 2022:
 i) Grafique el proceso de siniestros agregados. [10]
+
+```{r}
+catSheet <- sheet %>%
+  filter(Ramo == "Catastrofico") %>%
+  mutate(acumMonto = cumsum(Monto))
+
+ggplot(catSheet, aes(x = as.Date(paste(Year, Month, Day, 
+sep = "-")), y = acumMonto)) + geom_step() +
+  geom_vline(aes(xintercept = as.Date(paste(Year, "01-01", sep = "-"))), color = "black", linetype = "dashed") +
+  labs(x = "Mes", y = "Siniestros agregados", color = "Ramo") +
+  scale_x_date(date_labels = "%d %b %Y", date_breaks = "2 month") +
+  scale_y_continuous(breaks = seq(0,800, 100) ) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+
+```
+
+
+```
+
 ii) Suponga que la aseguradora cobró como prima neta agregada el monto total de
 los 12 siniestros y que cobró una tercera parte al inicio de cada año a sus
 asegurados. Grafique el proceso de primas recolectadas. [5]
