@@ -166,4 +166,39 @@ ggplot(grouped_data, aes(x = as.Date(paste(Year, Month, "01", sep = "-")), y = N
 
 ```
 
+c) Con la información de los 3 años construya 4 histogramas de los montos individuales
+de los siniestros de cada uno de los ramos. [10]
+
+```{r}
+# Cargar el paquete necesario
+library(ggplot2)
+
+# Calcular los montos individuales de los siniestros para cada ramo y año
+amount_data <- sheet %>%
+  group_by(Year,  Ramo) %>%
+  summarize(Monto = sum(Monto))
+
+# Crear los histogramas
+
+ggplot(sheet, aes(x = Monto)) +
+  geom_histogram(bins = 10) +
+  facet_wrap(~ Ramo, scales = "free" ) +
+  labs(x = "Monto", y = "Frecuencia") +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+
+```
+
+d) Se quiere analizar exclusivamente el ramo Catastrófico de 2020 a 2022:
+i) Grafique el proceso de siniestros agregados. [10]
+ii) Suponga que la aseguradora cobró como prima neta agregada el monto total de
+los 12 siniestros y que cobró una tercera parte al inicio de cada año a sus
+asegurados. Grafique el proceso de primas recolectadas. [5]
+iii) Si la Aseguradora tenía un capital inicial para estos riesgos de 50 millones de
+dólares, combine los procesos anteriores para graficar el proceso de excedentes.
+¿Qué puede concluir? (Sugerencia: Considere el tiempo en el que se presenta
+el primer excedente por debajo del capital inicial y el tiempo de ruina). [10]
+
+
 
