@@ -104,6 +104,8 @@ library(readxl)
 library(openxlsx)
 library(lubridate)
 library(dplyr)  # Load the dplyr package for data manipulation
+library(ggplot2)
+
 
 ```
 
@@ -115,10 +117,53 @@ file_path <- paste0(getwd(), "/bases/Tarea1.xlsx")
 sheet_name <- "2"
 
 # Read the entire sheet into a data frame
-sheet <- read_excel(file_path, sheet = sheet_name, range = "A7:D421")
+sheet <- read_excel(file_path, sheet = sheet_name, range = "A7:D427")
+
+# Extract year and month from the Fecha column
+sheet$Month <- lubridate::month(sheet$Fecha)
+sheet$Year <- lubridate::year(sheet$Fecha)
+
+sheet$Year <- as.factor(sheet$Year)
+sheet$Month <- as.factor(sheet$Month)
+sheet$Ramo <- as.factor(sheet$Ramo)
 
 # Print the table
 head(sheet)
 summary(sheet)
 
 ```
+
+b) Construya una gráfica que permita analizar la evolución mensual del número de
+reclamaciones por ramo de 2020 a 2022
+
+```{r}
+# Create a grid of all possible Year, Month, and Ramo combinations
+all_combinations <- expand.grid(Year = unique(sheet$Year),
+                                Month = unique(sheet$Month),
+                                Ramo = unique(sheet$Ramo)) %>%
+                                arrange(Year, Month, Ramo)
+
+# Agrupamos los datos por año, mes y ramo
+
+agg_data <- sheet %>%
+  group_by(Year, Month, Ramo) %>%
+  summarise(Num_Reclamaciones = n())
+
+# Left join the grid with your data
+grouped_data <- all_combinations %>%
+  left_join(agg_data, by = c("Year", "Month", "Ramo")) %>%
+  mutate(Num_Reclamaciones = ifelse(is.na(Num_Reclamaciones), 0, Num_Reclamaciones)) 
+
+# Create the plot with faceting by year and connected lines across months
+ggplot(grouped_data, aes(x = as.Date(paste(Year, Month, "01", sep = "-")), y = Num_Reclamaciones, color = Ramo, group = Ramo)) +
+  geom_line() +
+  geom_vline(aes(xintercept = as.Date(paste(Year, "01-01", sep = "-"))), color = "black", linetype = "dashed") +
+  labs(x = "Mes", y = "Número de reclamaciones", color = "Ramo") +
+  scale_x_date(date_labels = "%b %Y", date_breaks = "1 month") +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+
+```
+
+
