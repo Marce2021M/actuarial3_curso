@@ -212,15 +212,85 @@ sep = "-")), y = acumMonto)) + geom_step() +
 ```
 
 
-```
-
 ii) Suponga que la aseguradora cobró como prima neta agregada el monto total de
 los 12 siniestros y que cobró una tercera parte al inicio de cada año a sus
 asegurados. Grafique el proceso de primas recolectadas. [5]
+
+```{r}
+prima_agregada_final <- tail(catSheet$acumMonto, 1)
+
+prima_agregada_func <- function(x){
+  return(x*prima_agregada_final/3)
+}
+
+x_values <- seq(2020, 2022,1)
+y_values <- sapply(x_values+1-2020, prima_agregada_func)
+
+# Create an igraph graph
+prima_agregada_serie <-data.frame(x_values = x_values, y_values = y_values)
+
+# Plot the graph using ggplot2
+ggplot(prima_agregada_serie, aes(x = x_values, y = y_values)) +
+  geom_step() +
+  scale_y_continuous(breaks = seq(0,800, 100) ) +
+  labs(x = "año", y = "Y", title = "Pima acumulada serie") +
+  theme_minimal()
+```
+
 iii) Si la Aseguradora tenía un capital inicial para estos riesgos de 50 millones de
 dólares, combine los procesos anteriores para graficar el proceso de excedentes.
 ¿Qué puede concluir? (Sugerencia: Considere el tiempo en el que se presenta
 el primer excedente por debajo del capital inicial y el tiempo de ruina). [10]
 
+
+```{r}
+# Crear un data frame con los datos de los excedentes
+
+serieMontos <- catSheet %>%
+  select(Year, Month, Day, Monto)
+
+for (i in 1:3) {
+  new_row <- c(as.character(2020 + i-1), "1", "1", -prima_agregada_func(1))
+  serieMontos <- rbind(serieMontos, new_row)
+}
+
+serieMontos <- serieMontos %>%
+  arrange(Year, Month, Day) %>% 
+  mutate(excedente = 50-cumsum(Monto))
+
+# Filtrar rows donde el excedente es negativo y 
+#donde el excedente es menor a 50  
+
+serieMontos <- serieMontos %>%
+  mutate(excedenteMenor50 = excedente < 50, 
+         excedenteNegativo = excedente < 0)
+print(serieMontos[serieMontos$excedenteNegativo,])
+print(serieMontos[serieMontos$excedenteMenor50,])
+
+
+# Extract points where excedenteNegativo is TRUE
+points_excedente_negativo <- head(serieMontos[serieMontos$excedenteNegativo,],1)
+
+# Extract points where excedenteMenor50 is TRUE
+points_excedente_menor_50 <- head(serieMontos[serieMontos$excedenteMenor50,],1)
+
+# Graficar el proceso de excedentes
+ggplot(serieMontos, aes(x = as.Date(paste(Year, Month, Day, 
+sep = "-")), y = excedente)) + geom_step() +
+  geom_vline(aes(xintercept = as.Date(paste(Year, "01-01", sep = "-"))), color = "black", linetype = "dashed") +
+  labs(x = "Mes y año", y = "Excedente") +
+  scale_x_date(date_labels = "%d %b %Y", date_breaks = "1 month") +
+  geom_hline(yintercept = 0, color = "red") +
+  geom_hline(yintercept = 50, color = "blue") +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))+ # Rotate x-axis labels for readability
+  geom_point(data = points_excedente_negativo, aes(x = as.Date(paste(Year, Month, Day, sep = "-")), y = excedente), color = "red") +
+  geom_point(data = points_excedente_menor_50, aes(x = as.Date(paste(Year, Month, Day, sep = "-")), y = excedente), color = "blue")+
+  geom_text(data = points_excedente_negativo, aes(label = as.Date(paste(Day, Month, Year, sep = "-")), x = as.Date(paste(Year, Month, Day, sep = "-")), y = excedente), vjust = 1.5, color = "red") +
+  geom_text(data = points_excedente_menor_50, aes(label = as.Date(paste(Day, Month, Year, sep = "-")), x = as.Date(paste(Year, Month, Day, sep = "-")), y = excedente), vjust = 1.5, color = "blue")
+
+
+```
 
 
