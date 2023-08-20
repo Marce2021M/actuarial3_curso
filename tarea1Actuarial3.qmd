@@ -14,20 +14,9 @@ editor_options:
 
 # Ejercicio 1
 
-Se sabe que el monto de las reclamaciones de un seguro de crédito es Exponencial
-con media de 80 mil pesos, y que el número de reclamaciones de cada uno de los 48
-asegurado (Nj) es ( )Po
-λ e independiente de los demás. En este seguro cada
-asegurado puede hacer más de una reclamación, pero la probabilidad de ese evento es
-de sólo 0.0265. La prima recargada agregada (bajo el principio de la desviación
-estándar) se define por [ ] [ ]E S S
-α
-ασΠ = + , donde 0
-α ≥ es el margen de seguridad.
+Se sabe que el monto de las reclamaciones de un seguro de crédito es Exponencial con media de 80 mil pesos, y que el número de reclamaciones de cada uno de los 48 asegurado (Nj) es ( )Po λ e independiente de los demás. En este seguro cada asegurado puede hacer más de una reclamación, pero la probabilidad de ese evento es de sólo 0.0265. La prima recargada agregada (bajo el principio de la desviación estándar) se define por \[ \] \[ \]E S S α ασΠ = + , donde 0 α ≥ es el margen de seguridad.
 
-ii) ¿Cuál es la prima recargada individual que se debe cobrar a cada asegurado si
-se considera un margen de seguridad de 0.5? ¿Cómo se compara frente a la
-respectiva prima neta individual? [10]
+ii) ¿Cuál es la prima recargada individual que se debe cobrar a cada asegurado si se considera un margen de seguridad de 0.5? ¿Cómo se compara frente a la respectiva prima neta individual? \[10\]
 
 ```{r}
 mediaDistPerd <- 80
@@ -72,12 +61,7 @@ cat("Con lo cual la recargada es ",primaRecargada/primaNetaIndividual, " veces l
 
 ```
 
-
-
-iii) Aproxime la distribución de S mediante el Teorema Central del Límite para
-encontrar el margen de seguridad que garantice con 99.5% de probabilidad que
-la prima recargada agregada será suficiente para hacer frente a las obligaciones
-de este seguro. ¿Cuál sería la prima recargada individual en este caso? [10]
+iii) Aproxime la distribución de S mediante el Teorema Central del Límite para encontrar el margen de seguridad que garantice con 99.5% de probabilidad que la prima recargada agregada será suficiente para hacer frente a las obligaciones de este seguro. ¿Cuál sería la prima recargada individual en este caso? \[10\]
 
 ```{r}
 # Aproximación de la distribución de S mediante el TCL
@@ -109,7 +93,6 @@ library(ggplot2)
 
 ```
 
-
 ```{r cargando datos_1}
 # Set the path to the Excel file and the sheet name
 
@@ -134,8 +117,7 @@ summary(sheet)
 
 ```
 
-b) Construya una gráfica que permita analizar la evolución mensual del número de
-reclamaciones por ramo de 2020 a 2022
+b)  Construya una gráfica que permita analizar la evolución mensual del número de reclamaciones por ramo de 2020 a 2022
 
 ```{r}
 # Create a grid of all possible Year, Month, and Ramo combinations
@@ -167,17 +149,11 @@ ggplot(grouped_data, aes(x = as.Date(paste(Year, Month, "01", sep = "-")), y = N
 
 ```
 
-c) Con la información de los 3 años construya 4 histogramas de los montos individuales
-de los siniestros de cada uno de los ramos. [10]
+c)  Con la información de los 3 años construya 4 histogramas de los montos individuales de los siniestros de cada uno de los ramos. \[10\]
 
 ```{r}
 # Cargar el paquete necesario
 library(ggplot2)
-
-# Calcular los montos individuales de los siniestros para cada ramo y año
-amount_data <- sheet %>%
-  group_by(Year,  Ramo) %>%
-  summarize(Monto = sum(Monto))
 
 # Crear los histogramas
 
@@ -191,8 +167,8 @@ ggplot(sheet, aes(x = Monto)) +
 
 ```
 
-d) Se quiere analizar exclusivamente el ramo Catastrófico de 2020 a 2022:
-i) Grafique el proceso de siniestros agregados. [10]
+d)  Se quiere analizar exclusivamente el ramo Catastrófico de 2020 a 2022:
+e)  Grafique el proceso de siniestros agregados. \[10\]
 
 ```{r}
 catSheet <- sheet %>%
@@ -211,10 +187,7 @@ sep = "-")), y = acumMonto)) + geom_step() +
 
 ```
 
-
-ii) Suponga que la aseguradora cobró como prima neta agregada el monto total de
-los 12 siniestros y que cobró una tercera parte al inicio de cada año a sus
-asegurados. Grafique el proceso de primas recolectadas. [5]
+ii) Suponga que la aseguradora cobró como prima neta agregada el monto total de los 12 siniestros y que cobró una tercera parte al inicio de cada año a sus asegurados. Grafique el proceso de primas recolectadas. \[5\]
 
 ```{r}
 prima_agregada_final <- tail(catSheet$acumMonto, 1)
@@ -237,11 +210,7 @@ ggplot(prima_agregada_serie, aes(x = x_values, y = y_values)) +
   theme_minimal()
 ```
 
-iii) Si la Aseguradora tenía un capital inicial para estos riesgos de 50 millones de
-dólares, combine los procesos anteriores para graficar el proceso de excedentes.
-¿Qué puede concluir? (Sugerencia: Considere el tiempo en el que se presenta
-el primer excedente por debajo del capital inicial y el tiempo de ruina). [10]
-
+iii) Si la Aseguradora tenía un capital inicial para estos riesgos de 50 millones de dólares, combine los procesos anteriores para graficar el proceso de excedentes. ¿Qué puede concluir? (Sugerencia: Considere el tiempo en el que se presenta el primer excedente por debajo del capital inicial y el tiempo de ruina). \[10\]
 
 ```{r}
 # Crear un data frame con los datos de los excedentes
@@ -292,5 +261,41 @@ sep = "-")), y = excedente)) + geom_step() +
 
 
 ```
+
+# Ejercicio 4
+
+Situación Financiera de las Aseguradoras. 
+
+En el archivo “Tarea 1.xls” aparecen Estados
+Financieros de las 83 Compañías Aseguradoras en México al 31 de diciembre de 2022.
+Considere la muestra integrada por las 25 principales Compañías Aseguradoras en términos de prima emitida para responder lo siguiente.
+
+```{r Cargando datos_4}
+# Set the path to the Excel file and the sheet name
+
+file_path <- paste0(getwd(), "/bases/Tarea1.xlsx")
+sheet_name <- "4"
+
+# Read the entire sheet into a data frame
+sheet2 <- read_excel(file_path, sheet = sheet_name, range = "A8:AP91")
+```
+
+CC a) Construya el histograma y el diagrama de caja y brazos para las inversiones como porcentaje del activo total. Interprete sus resultados en términos de la estructura financiera de las aseguradoras. [5]
+
+```{r}
+
+```
+
+
+CC b) Construya el histograma y el diagrama de caja y brazos para las reservas técnicas
+como porcentaje del pasivo total. Interprete sus resultados en términos de la
+estructura financiera de las aseguradoras. [5]
+CC c) Obtenga una gráfica de barras apiladas que permita comparar el tamaño de las 4
+reservas técnicas como porcentaje del pasivo total para las 25 principales
+aseguradoras. ¿Qué puede concluir? [10]
+CC d) Analice mediante el diagrama de dispersión y el coeficiente de correlación lineal la
+relación entre: (i) el margen de utilidad (resultado del ejercicio / prima emitida) vs. la
+razón combinada; y (ii) el margen de utilidad vs. el porcentaje de retención (prima de
+retención / prima emitida). ¿Qué pude concluir? [10]
 
 
