@@ -89,6 +89,7 @@ library(openxlsx)
 library(lubridate)
 library(dplyr)  # Load the dplyr package for data manipulation
 library(ggplot2)
+library(tidyr)
 
 
 ```
@@ -278,24 +279,141 @@ sheet_name <- "4"
 
 # Read the entire sheet into a data frame
 sheet2 <- read_excel(file_path, sheet = sheet_name, range = "A8:AP91")
+
+names(sheet2)
+
+summary(sheet2)
+
+muestrasEmpresas <- head(sheet2[order(sheet2$"Primas Emitidas", decreasing = T),],25)
 ```
 
 CC a) Construya el histograma y el diagrama de caja y brazos para las inversiones como porcentaje del activo total. Interprete sus resultados en términos de la estructura financiera de las aseguradoras. [5]
 
 ```{r}
+muestrasEmpresas$percentage_column <- muestrasEmpresas$Inversiones/muestrasEmpresas$"Activo Total"
 
+ggplot(muestrasEmpresas, aes(x = percentage_column)) +
+  geom_histogram(bins= 10, fill = "skyblue", color = "black", alpha = 0.7) +
+  geom_boxplot( fill = "lightgray", color = "black", alpha = 0.7,outlier.colour = "red") +
+  labs(x = "Investments as % of Total Assets", y = "Frequency") +
+  theme_minimal()
+
+boxplot(muestrasEmpresas$percentage_column, main = "Investments as % of Total Assets", col = "skyblue", horizontal = TRUE)
 ```
+
 
 
 CC b) Construya el histograma y el diagrama de caja y brazos para las reservas técnicas
 como porcentaje del pasivo total. Interprete sus resultados en términos de la
 estructura financiera de las aseguradoras. [5]
+
+```{r}
+muestrasEmpresas$percentage_column2 <- muestrasEmpresas$"Total Reservas Técnicas"/muestrasEmpresas$"Pasivo Total"
+
+ggplot(muestrasEmpresas, aes(x = percentage_column2)) +
+  geom_histogram(bins= 10, fill = "skyblue", color = "black", alpha = 0.7) +
+  geom_boxplot( fill = "lightgray", color = "black", alpha = 0.7,outlier.colour = "red") +
+  labs(x = "Technical Reserves as % of Total Liabilities", y = "Frequency") +
+  theme_minimal()
+
+boxplot(muestrasEmpresas$percentage_column2, main = "Technical Reserves as % of Total Liabilities", col = "skyblue", horizontal = TRUE)
+```
+
 CC c) Obtenga una gráfica de barras apiladas que permita comparar el tamaño de las 4
 reservas técnicas como porcentaje del pasivo total para las 25 principales
 aseguradoras. ¿Qué puede concluir? [10]
+
+```{r }
+muestrasEmpresasReservas <- muestrasEmpresas %>%
+  select("Aseguradora", "Reserva de Riesgos en Curso", "Reserva para Obligaciones Pendientes de Cumplir", "Reserva de Contingencia", "Reservas de Riesgos Catastróficos","Total Reservas Técnicas", "Pasivo Total", "Primas Emitidas")
+
+muestrasEmpresasReservas$percentage_column11 <- muestrasEmpresasReservas$"Reserva de Riesgos en Curso"/muestrasEmpresasReservas$"Pasivo Total"
+
+muestrasEmpresasReservas$percentage_column12 <- muestrasEmpresasReservas$"Reserva para Obligaciones Pendientes de Cumplir"/muestrasEmpresasReservas$"Pasivo Total"
+
+muestrasEmpresasReservas$percentage_column13 <- muestrasEmpresasReservas$"Reserva de Contingencia"/muestrasEmpresasReservas$"Pasivo Total"
+
+muestrasEmpresasReservas$percentage_column14 <- muestrasEmpresasReservas$"Reservas de Riesgos Catastróficos"/muestrasEmpresasReservas$"Pasivo Total"
+
+muestrasEmpresasReservas$percentage_column1 <- muestrasEmpresasReservas$"Total Reservas Técnicas"/muestrasEmpresasReservas$"Pasivo Total"
+
+agrupamosReservas <- muestrasEmpresasReservas %>%
+  select(
+    Aseguradora,
+    percentage_column11,
+    percentage_column12,
+    percentage_column13,
+    percentage_column14,
+    "Primas Emitidas"
+  ) 
+
+# Assuming you have aggregated data in the "agrupamosReservas" dataframe
+# Reshape the data to a longer format
+
+agrupamosReservas$Aseguradora <- factor(agrupamosReservas$Aseguradora,levels = agrupamosReservas$Aseguradora[order(agrupamosReservas$"Primas Emitidas")])
+
+agrupamosReservas_long <- agrupamosReservas %>%
+  pivot_longer(cols = starts_with("percentage_column"), names_to = "Reserva_Type", values_to = "Percentage")
+
+# Create the stacked bar plot
+ggplot(agrupamosReservas_long, aes(x = Aseguradora, y = Percentage, fill = Reserva_Type)) +
+  geom_bar(stat = "identity") + 
+  labs(x = "Aseguradora", y = "Porcentaje") +
+  ggtitle("Reservas Técnicas como % del Pasivo Total") +
+  scale_fill_discrete(labels = c(
+    "Reserva de Riesgos en Curso",
+    "Reserva para Obligaciones Pendientes de Cumplir",
+    "Reserva de Contingencia",
+    "Reservas de Riesgos Catastróficos",
+    "Total Reservas Técnicas"
+  )) +
+  theme_minimal() +
+  theme(legend.position = "bottom") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))  # Rotate x-axis labels for readability
+
+```
+
 CC d) Analice mediante el diagrama de dispersión y el coeficiente de correlación lineal la
 relación entre: (i) el margen de utilidad (resultado del ejercicio / prima emitida) vs. la
-razón combinada; y (ii) el margen de utilidad vs. el porcentaje de retención (prima de
+razón combinada; 
+
+```{r}
+muestrasEmpresas$margenUtilidad <- muestrasEmpresas$"Utilidad  (Pérdida) del Ejercicio"/muestrasEmpresas$"Primas Emitidas"
+
+muestrasEmpresas$razonCombinada <- muestrasEmpresas$"Costo Neto de Siniestralidad, Reclamaciones y Otras Obligaciones Pendientes de Cumplir"/(muestrasEmpresas$"Primas De Retención")
+
+# Create a scatter plot
+ggplot(muestrasEmpresas, aes(x = margenUtilidad, y = razonCombinada)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") + 
+  labs(x = "Margen de Utilidad", y = "Razón Combinada") +
+  ggtitle("Relación entre Margen de Utilidad y Razón Combinada") +
+  theme_minimal()
+
+# Calculate the linear correlation coefficient
+correlation <- cor(muestrasEmpresas$margenUtilidad, muestrasEmpresas$razonCombinada)
+print(paste("Coeficiente de correlación lineal:", correlation))
+```
+
+y (ii) el margen de utilidad vs. el porcentaje de retención (prima de
 retención / prima emitida). ¿Qué pude concluir? [10]
 
+```{r}
+muestrasEmpresas$porcentRetencion <- muestrasEmpresas$"Primas De Retención"/muestrasEmpresas$"Primas Emitidas"
 
+# Create a scatter plot
+ggplot(muestrasEmpresas, aes(x = margenUtilidad, y = porcentRetencion)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") + 
+  labs(x = "Margen de Utilidad", y = "Porcentaje de Retención") +
+  ggtitle("Relación entre Margen de Utilidad y Porcentaje de Retención") +
+  theme_minimal()
+
+# Calculate the linear correlation coefficient
+correlation <- cor(muestrasEmpresas$margenUtilidad, muestrasEmpresas$porcentRetencion)
+print(paste("Coeficiente de correlación lineal:", correlation))
+
+
+```
+
+No hay nada que se pueda decir, realmente no hay una correlación fuerte entre las variables
