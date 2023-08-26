@@ -380,7 +380,7 @@ razón combinada;
 ```{r}
 muestrasEmpresas$margenUtilidad <- muestrasEmpresas$"Utilidad  (Pérdida) del Ejercicio"/muestrasEmpresas$"Primas Emitidas"
 ##CHECAR
-muestrasEmpresas$razonCombinada <- muestrasEmpresas$"Costo Neto de Siniestralidad, Reclamaciones y Otras Obligaciones Pendientes de Cumplir"/(muestrasEmpresas$"Primas De Retención")
+muestrasEmpresas$razonCombinada <- (muestrasEmpresas$"Costo Neto de Siniestralidad, Reclamaciones y Otras Obligaciones Pendientes de Cumplir"+muestrasEmpresas$"Costo Neto de Adquisición")/(muestrasEmpresas$"Primas de Retención Devengadas")
 
 # Create a scatter plot
 ggplot(muestrasEmpresas, aes(x = margenUtilidad, y = razonCombinada)) +
