@@ -417,3 +417,8 @@ print(paste("Coeficiente de correlación lineal:", correlation))
 ```
 
 No hay nada que se pueda decir, realmente no hay una correlación fuerte entre las variables
+
+
+# Ejercicio 13
+
+# Ejercicio 14
