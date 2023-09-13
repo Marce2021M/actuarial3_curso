@@ -265,11 +265,9 @@ sep = "-")), y = excedente)) + geom_step() +
 
 # Ejercicio 4
 
-Situación Financiera de las Aseguradoras. 
+Situación Financiera de las Aseguradoras.
 
-En el archivo “Tarea 1.xls” aparecen Estados
-Financieros de las 83 Compañías Aseguradoras en México al 31 de diciembre de 2022.
-Considere la muestra integrada por las 25 principales Compañías Aseguradoras en términos de prima emitida para responder lo siguiente.
+En el archivo "Tarea 1.xls" aparecen Estados Financieros de las 83 Compañías Aseguradoras en México al 31 de diciembre de 2022. Considere la muestra integrada por las 25 principales Compañías Aseguradoras en términos de prima emitida para responder lo siguiente.
 
 ```{r Cargando datos_4}
 # Set the path to the Excel file and the sheet name
@@ -287,7 +285,7 @@ summary(sheet2)
 muestrasEmpresas <- head(sheet2[order(sheet2$"Primas Emitidas", decreasing = T),],25)
 ```
 
-CC a) Construya el histograma y el diagrama de caja y brazos para las inversiones como porcentaje del activo total. Interprete sus resultados en términos de la estructura financiera de las aseguradoras. [5]
+CC a) Construya el histograma y el diagrama de caja y brazos para las inversiones como porcentaje del activo total. Interprete sus resultados en términos de la estructura financiera de las aseguradoras. \[5\]
 
 ```{r}
 muestrasEmpresas$percentage_column <- muestrasEmpresas$Inversiones/muestrasEmpresas$"Activo Total"
@@ -301,11 +299,7 @@ ggplot(muestrasEmpresas, aes(x = percentage_column)) +
 boxplot(muestrasEmpresas$percentage_column, main = "Investments as % of Total Assets", col = "skyblue", horizontal = TRUE)
 ```
 
-
-
-CC b) Construya el histograma y el diagrama de caja y brazos para las reservas técnicas
-como porcentaje del pasivo total. Interprete sus resultados en términos de la
-estructura financiera de las aseguradoras. [5]
+CC b) Construya el histograma y el diagrama de caja y brazos para las reservas técnicas como porcentaje del pasivo total. Interprete sus resultados en términos de la estructura financiera de las aseguradoras. \[5\]
 
 ```{r}
 muestrasEmpresas$percentage_column2 <- muestrasEmpresas$"Total Reservas Técnicas"/muestrasEmpresas$"Pasivo Total"
@@ -319,9 +313,7 @@ ggplot(muestrasEmpresas, aes(x = percentage_column2)) +
 boxplot(muestrasEmpresas$percentage_column2, main = "Technical Reserves as % of Total Liabilities", col = "skyblue", horizontal = TRUE)
 ```
 
-CC c) Obtenga una gráfica de barras apiladas que permita comparar el tamaño de las 4
-reservas técnicas como porcentaje del pasivo total para las 25 principales
-aseguradoras. ¿Qué puede concluir? [10]
+CC c) Obtenga una gráfica de barras apiladas que permita comparar el tamaño de las 4 reservas técnicas como porcentaje del pasivo total para las 25 principales aseguradoras. ¿Qué puede concluir? \[10\]
 
 ```{r }
 muestrasEmpresasReservas <- muestrasEmpresas %>%
@@ -373,9 +365,7 @@ ggplot(agrupamosReservas_long, aes(x = Aseguradora, y = Percentage, fill = Reser
 
 ```
 
-CC d) Analice mediante el diagrama de dispersión y el coeficiente de correlación lineal la
-relación entre: (i) el margen de utilidad (resultado del ejercicio / prima emitida) vs. la
-razón combinada; 
+CC d) Analice mediante el diagrama de dispersión y el coeficiente de correlación lineal la relación entre: (i) el margen de utilidad (resultado del ejercicio / prima emitida) vs. la razón combinada;
 
 ```{r}
 muestrasEmpresas$margenUtilidad <- muestrasEmpresas$"Utilidad  (Pérdida) del Ejercicio"/muestrasEmpresas$"Primas Emitidas"
@@ -395,8 +385,7 @@ correlation <- cor(muestrasEmpresas$margenUtilidad, muestrasEmpresas$razonCombin
 print(paste("Coeficiente de correlación lineal:", correlation))
 ```
 
-y (ii) el margen de utilidad vs. el porcentaje de retención (prima de
-retención / prima emitida). ¿Qué pude concluir? [10]
+y (ii) el margen de utilidad vs. el porcentaje de retención (prima de retención / prima emitida). ¿Qué pude concluir? \[10\]
 
 ```{r}
 muestrasEmpresas$porcentRetencion <- muestrasEmpresas$"Primas De Retención"/muestrasEmpresas$"Primas Emitidas"
@@ -418,7 +407,43 @@ print(paste("Coeficiente de correlación lineal:", correlation))
 
 No hay nada que se pueda decir, realmente no hay una correlación fuerte entre las variables
 
-
 # Ejercicio 13
+
+**Método de momentos vs. método de percentiles.**
+
+Para una muestra de 12 siniestros se sabe que la media es 35,000, la desviación estándar 75,000, la mediana 10,000 y el percentil 90% es 100,000. Si la muestra proviene de una distribución Weibull $( \gamma, \theta )$, con
+
+$$ F(x) = 1 - e^{\left( -\left( \frac{x}{\theta} \right)^{\gamma} \right)} \quad \text{para} \quad x \geq 0 $$
+
+```{=tex}
+\begin{enumerate}
+    \item[a)] Utilice el método de momentos para estimar \( \gamma \) y \( \theta \). [10]
+    \item[b)] Utilice el método de percentiles para estimar \( \gamma \) y \( \theta \). [10]
+\end{enumerate}
+```
+```{r}
+library(rootSolve)
+
+# Define the system of equations
+eq_system <- function(vars) {
+  # Define the variables
+  alfa <- vars
+  
+  f1 <- (gamma(1+2/alfa)*35**2)/(gamma(1+1/alfa)**2) - (11*75**2)/12 + 35**2
+  
+  return(f1)
+}
+
+# Initial estimates (modify based on intuition or prior knowledge)
+initial_estimates <- 20
+
+# Find the root
+results <- uniroot(f = eq_system, start = initial_estimates)
+
+# Display results
+cat("Roots are:", results$root, "\n")
+```
+
+
 
 # Ejercicio 14
