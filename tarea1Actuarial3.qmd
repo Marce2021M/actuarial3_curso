@@ -278,10 +278,6 @@ sheet_name <- "4"
 # Read the entire sheet into a data frame
 sheet2 <- read_excel(file_path, sheet = sheet_name, range = "A8:AP91")
 
-names(sheet2)
-
-summary(sheet2)
-
 muestrasEmpresas <- head(sheet2[order(sheet2$"Primas Emitidas", decreasing = T),],25)
 ```
 
@@ -411,12 +407,27 @@ No hay nada que se pueda decir, realmente no hay una correlación fuerte entre l
 
 **Método de momentos vs. método de percentiles.**
 
-Para una muestra de 12 siniestros se sabe que la media es 35,000, la desviación estándar 75,000, la mediana 10,000 y el percentil 90% es 100,000. Si la muestra proviene de una distribución Weibull \( \gamma, \theta \), con
+Para una muestra de 12 siniestros se sabe que la media es 35,000, la desviación estándar 75,000, la mediana 10,000 y el percentil 90% es 100,000. Si la muestra proviene de una distribución Weibull ( $\gamma$, $\theta$ ), con
 
-\[F(x) = 1 - e^{-\left( \frac{x}{\theta} \right)^{\gamma}} \quad \text{para} \quad x \geq 0\]
+$$F(x) = 1 - e^{-\left( \frac{x}{\theta} \right)^{\gamma}} \quad \text{para} \quad x \geq 0$$
 
-1. Utilice el método de momentos para estimar \( \gamma \) y \( \theta \). [10 puntos]
+1.  Utilice el método de momentos para estimar ( \gamma ) y ( \theta ). \[10 puntos\]
 
+Primero notemos que los momentos importantes (primer momento y segundo momento central) de una Weibull son:
+
+$$\mu = \theta\Gamma(1+\frac{1}{\alpha})$$
+
+$$\sigma^{2} = \theta^{2}\Gamma(1+\frac{2}{\alpha})-\mu^{2}$$
+
+Por lo que desarrollando el sistema de ecuaciones tenemos que:
+
+$$\sigma^{2}+\mu^{2}= \mu^{2}\frac{\Gamma(1+\frac{2}{\alpha})}{(\Gamma{(1+\frac{1}{\alpha})})^{2}}$$
+
+Y siguiendo el método de momentos haremos que:
+$$\mu=\bar{X}$$
+$$\sigma^{2}=\frac{1}{n}\sum_{i=1}^{n}(X_{i}-\bar{X})^{2}$$
+
+Con lo cual procederemos a resolver el sistema de ecuaciones numéricamente:
 
 ```{r}
 library(rootSolve)
@@ -432,8 +443,8 @@ eq_system <- function(vars) {
    return(f1)
 }
 
-# Initial estimates (modify based on intuition or prior knowledge)
-lower_bound <- 0.01
+# Initial estimates 
+lower_bound <- 0.1
 upper_bound <- 100
 
 # Find the root
@@ -446,7 +457,28 @@ theta <- 35/gamma(1+1/alfa)
 cat("El valor de theta es:", theta, "\n")
 ```
 
-2. Utilice el método de percentiles para estimar \( \gamma \) y \( \theta \). [10 puntos]
+2.  Utilice el método de percentiles para estimar ( \gamma ) y ( \theta ). \[10 puntos\]
+
+Notemos que al encontrar los cuantiles de una Weibull tenemos que:
+$$Q(p)=\theta(-\ln(1-p))^{\frac{1}{\gamma}}$$
+
+la cual fue encontrada al desarrollar la función de distribución acumulada de la Weibull a partir de esta ecuación:
+
+$$F(x) = 1 - e^{-\left( \frac{x}{\theta} \right)^{\gamma}} \quad \text{para} \quad x \geq 0$$
+
+Con lo cual, dados los datos que tenemos, procederemos a crear el siguiente sistema de ecuaciones para con el método de momentos:
+
+$$Q(0.9)=100$$
+
+$$Q(0.5)=10$$
+
+Desarrollando el sistema obtenemos lo siguiente:
+
+$$\gamma = \frac{ln(\frac{ln(2)}{ln(10)})}{-ln(10)}$$
+$$\theta=\frac{10}{(ln(2))^{\frac{1}{\gamma}}}$$
+
+
+```{r}
 
 ```{r}
 gamma <- -log(log(2)/log(10))/log(10)
@@ -461,13 +493,55 @@ cat("El valor de theta es:", theta, "\n")
 
 # Estimación por Máxima Verosimilitud
 
-Suponga que $( X_1, X_2, \dots, X_n )$ es una muestra aleatoria de ( $N(\mu, \sigma^2)$ ), donde ( $\mu \in \mathbb{R}$ ) y ( $\sigma > 0$ ).
+Suponga que $( X_1, X_2, \dots, X_n )$ es una muestra aleatoria de $N(\mu, \sigma^2)$ , donde $\mu \in \mathbb{R}$ y $\sigma > 0$ .
 
-**a)** Encuentre los EMV de ( $\mu$) y ( $\sigma^{2}$ ) (donde ( $\sigma^2 > 0$ )). No olvide verificar que maximizan a la función de verosimilitud. \[10 puntos\]
+**a)** Encuentre los EMV de $\mu$ y $\sigma^{2}$ (donde $\sigma^2 > 0$ ). No olvide verificar que maximizan a la función de verosimilitud. \[10 puntos\]
 
-**b)** Suponga ( $X_i$ ) representa la pérdida del i-ésimo siniestro de cierto seguro.
+La función de verosimilitud dada una muestra de tamaño $n$ de $X$ es:
 
-**i)** Una muestra de 100 pérdidas revela que 62 se ubicaron por debajo de 1,000 dólares y 38 por arriba de 1,000 dólares. Si se sabe que ( \$\sigma\$ = 200 ), ¿cuál es el estimador de máxima verosimilitud de ( \$\mu\$ ) usando sólo esta información? \[10 puntos\]
+$$L(\mu, \sigma^2) = \prod_{i=1}^{n} f(x_i; \mu, \sigma^2) = \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi\sigma^2}} e^{-\frac{(x_i-\mu)^2}{2\sigma^2}}$$
+
+$$= (2\pi\sigma^{2})^{-\frac{n}{2}}e^{-\frac{\sum(x_{i}-\mu)^{2}}{2\sigma^{2}}}$$
+
+De la cual obtenemos la función logarítmica de verosimilitud:
+
+$$\ln L(\mu, \sigma^2) = -\frac{n}{2}\ln(2\pi\sigma^{2})-\frac{\sum(x_{i}-\mu)^{2}}{2\sigma^{2}}$$
+
+Derivando respecto a $\mu$ e igualando a cero, obtenemos:
+
+$$\frac{\partial \ln L(\mu, \sigma^2)}{\partial \mu} = \frac{\sum(x_{i}-\mu)}{\sigma^{2}} = 0$$
+
+Con lo cual obtenemos que:
+
+$$\frac{\sum x_{i}}{n}=\hat{\mu}$$
+
+Derivando respecto a $\sigma^{2}$ e igualando a cero, obtenemos:
+
+$$\frac{\partial \ln L(\mu, \sigma^2)}{\partial \sigma^{2}} = -\frac{n}{2\sigma^{2}}+\frac{\sum(x_{i}-\mu)^{2}}{2\sigma^{4}} = 0$$
+
+Con lo cual obtenemos que:
+
+$$\frac{\sum(x_{i}-\mu)^{2}}{n}=\hat{\sigma^{2}}$$
+
+Los cuales serían los estimadores de máxima verosimilitud si verificamos que maximizan a la función de verosimilitud. Para esto notemos que la primera entrada de la diagonal de la matriz hessiana es:
+
+$$\frac{\partial^{2} \ln L(\mu, \sigma^2)}{\partial \mu^{2}} = -\frac{n}{\sigma^{2}} < 0$$
+
+y que el determinante de la matriz hessiana es:
+
+$$\det H(\mu, \sigma^2) = \frac{n}{\sigma^{2}}\frac{\sum(x_{i}-\mu)^2}{2\sigma^{6}} >= 0$$
+
+Con lo cual tenemos que la matriz hessiana es negativa semidefinida en todo punto, por lo que el punto crítico es un máximo.
+
+**b)** Suponga $X_i$ representa la pérdida del i-ésimo siniestro de cierto seguro.
+
+**i)** Una muestra de 100 pérdidas revela que 62 se ubicaron por debajo de 1,000 dólares y 38 por arriba de 1,000 dólares. Si se sabe que $\sigma = 200$, ¿cuál es el estimador de máxima verosimilitud de $\mu$ usando sólo esta información? \[10 puntos\]
+
+Por el principio de máximo verosímil tenemos que la función de máxima verosimilitud es:
+
+$$L(\mu) = P(x_{i}<=1000)^{62}P(x_{i}>1000)^{38}$$
+
+Procederemos a maximar la función numéricamente:
 
 ```{r}
 library(stats)
@@ -493,6 +567,12 @@ cat("El valor de mu es:", mu$maximum, "\n")
 ```
 
 **ii)** Si además se sabe que las pérdidas por debajo de 1,000 sumaron 42,561 dólares y la suma de sus cuadrados fue de 35,097,400, utilice esta información adicional a la del inciso anterior para estimar a ( \$\mu\$ ). \[10 puntos\]
+
+Dado lo que sabemos y por el principio de máxima verosimilitud, tenemos que la función de máxima verosimilitud es:
+
+$$L(\mu) = \prod_{i=1}^{62} (2\pi\sigma^{2})^{-\frac{n}{2}}e^{-\frac{x_{i}-\mu}{2\sigma^{2}}}P(x_{i}>1000)^{38}$$
+
+Por lo que procederemos a maximizar la función numéricamente:
 
 ```{r}
 # Define the system of equations
