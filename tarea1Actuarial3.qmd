@@ -411,39 +411,109 @@ No hay nada que se pueda decir, realmente no hay una correlación fuerte entre l
 
 **Método de momentos vs. método de percentiles.**
 
-Para una muestra de 12 siniestros se sabe que la media es 35,000, la desviación estándar 75,000, la mediana 10,000 y el percentil 90% es 100,000. Si la muestra proviene de una distribución Weibull $( \gamma, \theta )$, con
+Para una muestra de 12 siniestros se sabe que la media es 35,000, la desviación estándar 75,000, la mediana 10,000 y el percentil 90% es 100,000. Si la muestra proviene de una distribución Weibull \( \gamma, \theta \), con
 
-$$ F(x) = 1 - e^{\left( -\left( \frac{x}{\theta} \right)^{\gamma} \right)} \quad \text{para} \quad x \geq 0 $$
+\[F(x) = 1 - e^{-\left( \frac{x}{\theta} \right)^{\gamma}} \quad \text{para} \quad x \geq 0\]
 
-```{=tex}
-\begin{enumerate}
-    \item[a)] Utilice el método de momentos para estimar \( \gamma \) y \( \theta \). [10]
-    \item[b)] Utilice el método de percentiles para estimar \( \gamma \) y \( \theta \). [10]
-\end{enumerate}
-```
+1. Utilice el método de momentos para estimar \( \gamma \) y \( \theta \). [10 puntos]
+
+
 ```{r}
 library(rootSolve)
 
 # Define the system of equations
+
 eq_system <- function(vars) {
-  # Define the variables
-  alfa <- vars
-  
-  f1 <- (gamma(1+2/alfa)*35**2)/(gamma(1+1/alfa)**2) - (11*75**2)/12 + 35**2
-  
-  return(f1)
+   # Define the variables
+   alfa <- vars
+   
+   f1 <- (gamma(1+2/alfa)*35^2)/(gamma(1+1/alfa)^2) - (11*75^2)/12 - 35^2
+   
+   return(f1)
 }
 
 # Initial estimates (modify based on intuition or prior knowledge)
-initial_estimates <- 20
+lower_bound <- 0.01
+upper_bound <- 100
 
 # Find the root
-results <- uniroot(f = eq_system, start = initial_estimates)
+results <- uniroot(f = eq_system, interval = c(lower_bound, upper_bound))
 
 # Display results
-cat("Roots are:", results$root, "\n")
+cat("El valor de alfa es:", results$root, "\n")
+alfa <- results$root
+theta <- 35/gamma(1+1/alfa)
+cat("El valor de theta es:", theta, "\n")
 ```
 
+2. Utilice el método de percentiles para estimar \( \gamma \) y \( \theta \). [10 puntos]
 
+```{r}
+gamma <- -log(log(2)/log(10))/log(10)
+
+theta <- 10/(log(2)^(1/gamma))
+
+cat("El valor de gamma es:", gamma, "\n")
+cat("El valor de theta es:", theta, "\n")
+```
 
 # Ejercicio 14
+
+# Estimación por Máxima Verosimilitud
+
+Suponga que $( X_1, X_2, \dots, X_n )$ es una muestra aleatoria de ( $N(\mu, \sigma^2)$ ), donde ( $\mu \in \mathbb{R}$ ) y ( $\sigma > 0$ ).
+
+**a)** Encuentre los EMV de ( $\mu$) y ( $\sigma^{2}$ ) (donde ( $\sigma^2 > 0$ )). No olvide verificar que maximizan a la función de verosimilitud. \[10 puntos\]
+
+**b)** Suponga ( $X_i$ ) representa la pérdida del i-ésimo siniestro de cierto seguro.
+
+**i)** Una muestra de 100 pérdidas revela que 62 se ubicaron por debajo de 1,000 dólares y 38 por arriba de 1,000 dólares. Si se sabe que ( \$\sigma\$ = 200 ), ¿cuál es el estimador de máxima verosimilitud de ( \$\mu\$ ) usando sólo esta información? \[10 puntos\]
+
+```{r}
+library(stats)
+# Define the system of equations
+
+eq_system <- function(vars) {
+   # Define the variables
+   mu <- vars
+   
+   f1 <- 62*log(pnorm(1000, mu, 200)) + 38*log(1-pnorm(1000, mu, 200))
+   
+   return(f1)
+}
+
+# Use optimize to find the maximum over a reasonable range
+
+mu <- optimize(eq_system, interval = c(1, 4000), maximum = TRUE)
+
+# Display the results
+cat("El valor de mu es:", mu$maximum, "\n")
+
+
+```
+
+**ii)** Si además se sabe que las pérdidas por debajo de 1,000 sumaron 42,561 dólares y la suma de sus cuadrados fue de 35,097,400, utilice esta información adicional a la del inciso anterior para estimar a ( \$\mu\$ ). \[10 puntos\]
+
+```{r}
+# Define the system of equations
+
+x_barra <- 42561/62
+x_cuadrada_suma <- 35097400
+sigma_cuadrada <- 200^2
+
+eq_system <- function(vars) {
+   # Define the variables
+   mu <- vars
+   
+   f1 <- - (62*(x_barra-mu)^2)/(2*sigma_cuadrada) + 38*log(1-pnorm(1000, mu, 200))
+   
+   return(f1)
+}
+
+# Use optimize to find the maximum over a reasonable range
+
+mu <- optimize(eq_system, interval = c(1, 10000), maximum = TRUE)
+
+# Display the results
+cat("El valor de mu es:", mu$maximum, "\n")
+```
