@@ -14,11 +14,6 @@ editor_options:
 
 # Ejercicio 1
 
----
-title: "Estadística Bayesiana"
-output: pdf_document
----
-
 Suponga que $Y_i$ es el número de reclamaciones anuales de cierta póliza de seguros y que su distribución es Po $\left(\lambda\right)$ , donde $\lambda$ es desconocido, pero su distribución a priori es $Gamma\left(\alpha,\theta\right)$. Si el número de reclamaciones de los últimos $n$ años, $Y_1, Y_2,..., Y_n$, son variables aleatorias iid, y $W$ es el número de reclamaciones de este año, aplique la Metodología Bayesiana para responder lo siguiente:
 
 a) Calcule la distribución posterior del parámetro $\lambda$ . [10]
@@ -52,7 +47,7 @@ lambdahat <- (conteo_siniestros + alpha - 1)*(theta/(ndatos*theta + 1))
 
 Por lo que tomando en cuenta los datos de los últimos años $\sum_{i=1}^{5}y_{i}=120$, tenemos que el estimador a posteriori tiene el valor de $\hat{\lambda}= `r lambdahat`$
 
-ii) El intervalo de máxima densidad posterior al 95% para \(\lambda\). [5]
+ii) El intervalo de máxima densidad posterior al 95% para $\lambda$. [5]
 
 Para esto minimizaremos el intervalo de la siguiente forma:
 
@@ -75,3 +70,109 @@ resultado <- optim(par=lambdahat, fn=funcion_objetivo, method="L-BFGS-B", lower 
 print(paste0("El intervalo de máxima densidad posterior al 95% para lambda es: [", resultado$par, ",", resultado$par+resultado$value,"]"))
 
 ```
+
+
+# Ejercicio 3
+
+
+# Función Gamma Incompleta
+
+Si $\Gamma(\alpha; x) = \int_{0}^{x} y^{\alpha-1} e^{-y} dy$ para $\alpha > 0$ y $x > 0$
+
+a) Demuestre que 
+
+$\Gamma(\alpha; x) = \Gamma(\alpha) \left( 1 - \sum_{j=0}^{\alpha-1} \frac{x^j e^{-x}}{j!} \right)$
+
+si $\alpha \in \mathbb{Z}^+$. (Sugerencia: Demuestre por inducción matemática sobre $\alpha$). [5]
+
+b) El Complemento de la Función Gamma Incompleta se define por
+
+$G(\alpha; x) = \int_{x}^{\infty} y^{\alpha-1} e^{-y} dy.$
+Demuestre que 
+
+$G(\alpha+k; x) = \Gamma(\alpha+k) \left( 1 - \frac{\Gamma(\alpha+k; x) }{\Gamma(\alpha+k)}\right)$
+[10]
+
+c) A partir de una muestra aleatoria de 10 reclamaciones de una distribución Gamma se observaron las siguientes pérdidas (en dólares): 1,500, 6,000, 3,500, 3,800, 1,800, 5,500, 4,800, 4,200, 3,900, 3,000. Si se sabe que $\alpha = 12$, encuentre el EMV de la probabilidad de que una pérdida supere 6,000 pesos. [5]
+
+```{r}
+sumaReclamaciones <- 1500 + 6000 + 3500 + 3800 + 1800 + 5500 + 4800 + 4200 + 3900 + 3000
+
+alpha <- 12
+
+n=10
+
+beta_gorro <- sumaReclamaciones/(n*alpha)
+
+lower_incomplete_gamma <- function(a, x) {
+  gamma(a) * pgamma(x, shape = a, rate = 1, lower.tail = TRUE)
+}
+
+estimador <- 1 - lower_incomplete_gamma(alpha, 6000/beta_gorro)/gamma(alpha)
+
+```
+
+Con lo cual tenemos que la probabilidad estimada (por EMV) de que una pérdida supere los 6000 pesos es de `r estimador`
+
+
+# Ejercicio 6
+
+# Mezclas
+
+Suponga que $X_i \sim \text{Exp}(\lambda_i)$, $\lambda_i > 0$, $i = 1, 2, \dots$
+
+a) Considere una mezcla finita de $K$ componentes variables. Obtenga su respectiva función de distribución acumulada, su función de densidad y su tasa de riesgo. ¿Cuántos parámetros habría en el modelo si $K = 4$? [10]
+
+b) El 75% de las reclamaciones tienen una distribución Exponencial con media de 3 mil dólares y el restante 25% una distribución Exponencial con media de 5 mil dólares. Obtenga la gráfica de la función de densidad de esta mezcla y calcule la probabilidad de que una reclamación exceda los 6 mil dólares. [10]
+
+Tenemos que la función de densidad que describe las reclamaciones es:
+
+$$f(x;\theta)=(.75\lambda_{1}e^{-\lambda_{1}x}+.25\lambda_{2}e^{-\lambda_{2}x})\mathbb{I}_{(0,\infty)}(x)$$
+
+Donde $\lambda_{1}=\frac{1}{3}$ y $\lambda_{2}=\frac{1}{5}$ tomando en cuenta que escalamos los datos para que resultasen en miles de dólares.
+
+La gráfica para esta distribución mezcla es la siguiente:
+
+```{r}
+library(ggplot2)
+
+lambda1 <- 1/3
+lambda2 <- 1/5
+
+# Define the function f(x; theta)
+densidadMezcla <- function(x, lambda1 = 1/3, lambda2 = 1/5) {
+  0.75 * dexp(x, rate = lambda1) + 0.25 * dexp(x, rate = lambda2)
+}
+
+probabilidadMezcla <- function(x, lambda1 = 1/3, lambda2 = 1/5) {
+  0.75 * pexp(x, rate = lambda1) + 0.25 * pexp(x, rate = lambda2)
+}
+
+# Create a dataset to plot using geom_line
+data_points <- data.frame(x = seq(-1, 20, by = 0.01))
+data_points$y <- densidadMezcla(data_points$x)
+
+# Split the data at x=0
+data_left <- subset(data_points, x < 0)
+data_right <- subset(data_points, x > 0)
+
+# Plot the function in the interval [-1, 20]
+ggplot() +
+  geom_line(data = data_left, aes(x = x, y = y, colour = "f(x; theta)"), size = 1) +
+  geom_line(data = data_right, aes(x = x, y = y, colour = "f(x; theta)"), size = 1) +
+  geom_point(aes(x = 0, y = densidadMezcla(0)), color = "red", size = 3, shape = 1) +
+  labs(title = "Gráfica de la función f(x; theta)",
+       x = "x (en miles de dólares)",
+       y = "f(x; theta)",
+       colour = "Función") +
+  theme_minimal()
+
+```
+
+Y por último, la probabilidad de que una reclamación exceda los 6000 dólares es de `r format(1 - probabilidadMezcla(6), nsmall = 8)`
+
+
+
+c) Suponga que $X \sim \text{Exp}(\Lambda)$ y que $\Lambda \sim \text{Gamma}(\alpha,\beta)$ para construir una mezcla continua. Obtenga la densidad marginal de $X$, su esperanza y su varianza. [10]
+
+
