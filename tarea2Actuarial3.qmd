@@ -1,0 +1,77 @@
+---
+title: "Actuarial 3 Tarea 1"
+subtitle: "Actuarial 3"
+lang: es
+author: "Marcelino Sánchez"
+date: today
+format:
+  html:
+    page-layout: full
+    embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Ejercicio 1
+
+---
+title: "Estadística Bayesiana"
+output: pdf_document
+---
+
+Suponga que $Y_i$ es el número de reclamaciones anuales de cierta póliza de seguros y que su distribución es Po $\left(\lambda\right)$ , donde $\lambda$ es desconocido, pero su distribución a priori es $Gamma\left(\alpha,\theta\right)$. Si el número de reclamaciones de los últimos $n$ años, $Y_1, Y_2,..., Y_n$, son variables aleatorias iid, y $W$ es el número de reclamaciones de este año, aplique la Metodología Bayesiana para responder lo siguiente:
+
+a) Calcule la distribución posterior del parámetro $\lambda$ . [10]
+
+b) Obtenga la distribución marginal de los datos. [10]
+
+c) ¿Cuál es la distribución predictiva de $W$? [10]
+
+d) Encuentre esperanza y varianza de $W$. ¿Cómo se puede interpretar la media condicional? (Sugerencia: Utilice esperanza y varianza iteradas). [10]
+
+**Ejercicio e)**
+
+Si en los últimos 5 años se tuvieron 120 siniestros, y con información de mercado se sabe que $\alpha = 4$ y $\theta = 5$, calcule:
+
+i) El estimador puntual de $\lambda$ considerando la función de pérdida cero-uno. [5]
+
+Como la función de pérdida es cero-uno, entonces por teoremas bayesianos y siguiendo el mismo flujo de inferencia tenemos que el estimador puntual a posteriori de $\lambda$ es la moda de la distribución posterior.
+
+Como la distribución posterior es una $Gamma((\sum_{i=1}^{5}y_{i})+\alpha, \frac{\theta}{n\theta + 1})$ entonces la moda es:
+
+$$\hat{\lambda}= ((\sum_{i=1}^{5}y_{i})+\alpha-1)(\frac{\theta}{n\theta + 1})$$
+
+```{r}
+ndatos<- 5
+conteo_siniestros <- 120
+alpha<- 4
+theta <- 5
+
+lambdahat <- (conteo_siniestros + alpha - 1)*(theta/(ndatos*theta + 1))
+```
+
+Por lo que tomando en cuenta los datos de los últimos años $\sum_{i=1}^{5}y_{i}=120$, tenemos que el estimador a posteriori tiene el valor de $\hat{\lambda}= `r lambdahat`$
+
+ii) El intervalo de máxima densidad posterior al 95% para \(\lambda\). [5]
+
+Para esto minimizaremos el intervalo de la siguiente forma:
+
+$$MIN$$
+
+```{r}
+# Definimos la función que queremos minimizar
+alpha <- conteo_siniestros + 4 - 1
+theta <- 5/(ndatos*5 + 1)
+
+funcion_objetivo <- function(x) {
+  return(qgamma(pgamma(x, shape=alpha, scale = theta)+.95, shape=alpha, scale = theta)-x)
+}
+
+# Utilizamos la función optim() para encontrar el mínimo
+resultado <- optim(par=lambdahat, fn=funcion_objetivo, method="L-BFGS-B", lower = 0, upper = 20.25839)
+
+
+# Imprimimos el resultado
+print(paste0("El intervalo de máxima densidad posterior al 95% para lambda es: [", resultado$par, ",", resultado$par+resultado$value,"]"))
+
+```
