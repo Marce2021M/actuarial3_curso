@@ -49,29 +49,27 @@ Por lo que tomando en cuenta los datos de los últimos años $\sum_{i=1}^{5}y_{i
 
 ii) El intervalo de máxima densidad posterior al 95% para $\lambda$. [5]
 
-Para esto minimizaremos el intervalo de la siguiente forma:
-
-$$MIN$$
-
 ```{r}
 # Definimos la función que queremos minimizar
 alpha <- conteo_siniestros + 4 - 1
 theta <- 5/(ndatos*5 + 1)
 
 funcion_objetivo <- function(x) {
-  return(qgamma(pgamma(x, shape=alpha, scale = theta)+.95, shape=alpha, scale = theta)-x)
+  return(qgamma(pgamma(x, shape=alpha, 
+  scale = theta)+.95, shape=alpha, 
+  scale = theta)-x)
 }
 
 # Utilizamos la función optim() para encontrar el mínimo
-resultado <- optim(par=lambdahat, fn=funcion_objetivo, method="L-BFGS-B", lower = 0, upper = 20.25839)
-
-
-# Imprimimos el resultado
-print(paste0("El intervalo de máxima densidad posterior al 95% para lambda es: [", resultado$par, ",", resultado$par+resultado$value,"]"))
+resultado <- optim(par=lambdahat, 
+fn=funcion_objetivo, method="L-BFGS-B", 
+lower = 0, upper = qgamma(.05, shape=alpha,
+ scale = theta)-.0001)
 
 ```
 
-
+El intervalo de máxima densidad posterior al 95% para lambda es
+[`r resultado$par` , `r resultado$par+resultado$value`]
 # Ejercicio 3
 
 
