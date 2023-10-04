@@ -1,0 +1,13 @@
+---
+title: "Actuarial 3 Tarea 3"
+subtitle: "Actuarial 3"
+lang: es
+author: "Marcelino Sánchez"
+date: today
+format:
+  html:
+    page-layout: full
+    embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
