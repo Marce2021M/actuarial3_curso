@@ -11,3 +11,154 @@ format:
 editor_options: 
   chunk_output_type: console
 ---
+
+# Ejercicio 2: Empalmes
+
+Para un seguro de daños, se conoce que las pérdidas menores a $c$ siguen una distribución $Exp(\frac{1}{\theta})$ con $\theta > 0$, y las pérdidas mayores o iguales a $c$ tienen una distribución $Pareto(\alpha, \beta)$ donde $\alpha > 0$ y $\beta >0$.
+
+a) Se pide demostrar que la función de densidad de la Distribución de Empalme está dada por:
+
+$f_X(x) = p \frac{\theta^{-1}e^{-\frac{x}{\theta}}}{1-e^{-\frac{c}{\theta}}} I(0 < x < c) + (1-p) \frac{\alpha (c+\beta)^{\alpha}}{(x+\beta)^{\alpha + 1}} I(x \geq c)$
+
+Dado:
+
+- $\theta = 100$
+- $\alpha = 4$
+- $\beta = 200$
+- $c = 100$
+
+Se pide:
+
+i) Graficar $f_X(x)$ con $p = 0.6$. Determinar si $f_X(x)$ es continua en $x = 100$.
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Instala e importa las librerías necesarias
+library(ggplot2)
+
+# Parámetros dados
+p <- 0.6
+theta <- 100  
+alpha <- 4  
+beta <- 200   
+c <- 100      
+
+# Definición de la función f_X(x)
+f_X <- function(x) {
+  if(x < c & x > 0){
+    resultado = p * (theta^(-1) * exp(-x/theta))/(1 - exp(-c/theta))}
+  else if (x >= c ){
+    resultado = (1-p) * (alpha * (c+beta)^alpha)/((x + beta)^(alpha+1))
+  }else{
+    resultado = 0
+  }
+  return(resultado)
+}
+
+# Genera valores para x y f_X(x)
+x_vals <- seq(.001, c-.0001, length.out = 1000)  # Modifica el rango de x si es necesario
+y_vals <- sapply(x_vals, f_X)
+
+# Grafica la función
+df1 <- data.frame(x = x_vals, y = y_vals)
+
+x_vals <- seq(c+.001, 300, length.out = 1000)  # Modifica el rango de x si es necesario
+y_vals <- sapply(x_vals, f_X)
+
+df2 <- data.frame(x = x_vals, y = y_vals)
+
+x_vals <- seq(-50, -.001, length.out = 1000)  # Modifica el rango de x si es necesario
+y_vals <- sapply(x_vals, f_X)
+
+df3 <- data.frame(x = x_vals, y = y_vals)
+df1$y[df1$x == c] <- NA
+df2$y[df2$x == c] <- NA
+df3$y[df3$x == c] <- NA
+
+ggplot() + 
+  geom_line(data=df1, aes(x, y)) +
+  geom_line(data=df2, aes(x, y)) +
+  geom_line(data=df3, aes(x, y)) +
+  geom_point(aes(x = 0, y = f_X(0)), color = "red", size = 3 ) +
+  geom_point(aes(x = c, y = f_X(c)), color = "red", size = 3) +
+  ggtitle(expression(f[X](x))) +
+  geom_point(aes(x = 0, y = f_X(0.001)), color = "red", size = 3 , shape=1) +
+  geom_point(aes(x = c, y = f_X(c-.001)), color = "red", size = 3, shape=1) +
+  ggtitle(expression(f[X](x))) +
+  theme_minimal()
+
+```
+
+ii) Encontrar el valor de $ p $ para que $ f_X(x) $ sea continua en $ x = 100 $ y luego graficar $ f_X(x) $ con este valor.
+
+```{r}
+theta <- 100  
+alpha <- 4  
+beta <- 200   
+c <- 100 
+aux1 <- ((c+beta)*(theta^(-1))*((exp(-c/theta))/(1-exp(-c/theta)))
+ + alpha)
+pvalor <- alpha/aux1
+```
+
+El valor de p en el cual se satisface la continuidad en c es `r pvalor`
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+p <- pvalor
+# Genera valores para x y f_X(x)
+x_vals <- seq(.001, c-.0001, length.out = 1000)  # Modifica el rango de x si es necesario
+y_vals <- sapply(x_vals, f_X)
+
+# Grafica la función
+df1 <- data.frame(x = x_vals, y = y_vals)
+
+x_vals <- seq(c+.001, 300, length.out = 1000)  # Modifica el rango de x si es necesario
+y_vals <- sapply(x_vals, f_X)
+
+df2 <- data.frame(x = x_vals, y = y_vals)
+
+x_vals <- seq(-50, -.001, length.out = 1000)  # Modifica el rango de x si es necesario
+y_vals <- sapply(x_vals, f_X)
+
+df3 <- data.frame(x = x_vals, y = y_vals)
+df1$y[df1$x == c] <- NA
+df2$y[df2$x == c] <- NA
+df3$y[df3$x == c] <- NA
+
+ggplot() + 
+  geom_line(data=df1, aes(x, y)) +
+  geom_line(data=df2, aes(x, y)) +
+  geom_line(data=df3, aes(x, y)) +
+  geom_point(aes(x = 0, y = f_X(0)), color = "red", size = 3 ) +
+  geom_point(aes(x = c, y = f_X(c)), color = "red", size = 3) +
+  ggtitle(expression(f[X](x))) +
+  geom_point(aes(x = 0, y = f_X(0.001)), color = "red", size = 3 , shape=1) +
+  geom_point(aes(x = c, y = f_X(c-.001)), color = "red", size = 3, shape=1) +
+  ggtitle(expression(f[X](x))) +
+  theme_minimal()
+
+```
+
+
+
+# Colas de las distribuciones
+
+Suponga que \( X \sim \text{Pareto}(\alpha, \theta) \) y \( Y \sim \text{Gamma}(\tau, \beta) \).
+
+## Comportamiento límite de la cola
+
+a) Utilice el criterio del comportamiento límite de la cola para demostrar que la Distribución Pareto tiene una cola más pesada que la Distribución Gamma.
+
+## Comparación de distribuciones
+
+b) Para comparar de manera más justa ambas distribuciones, queremos que ambas tengan media 5 y varianza 75.
+
+i) Encuentre los valores de \( \alpha \), \( \theta \), \( \tau \), y \( \beta \).
+ii) Compare en la misma gráfica ambas funciones de densidad. ¿Qué conclusiones se pueden derivar?
+
+## Criterio de la tasa de riesgo
+
+c) Utilice el criterio de la tasa de riesgo para demostrar que la Distribución Pareto tiene cola pesada.
+
+## Función de media de pérdida en exceso
+
+d) Demuestre que la Distribución Gamma tiene cola ligera si \( \tau > 1 \), pero pesada si \( \tau < 1 \). (*Sugerencia:* Comience verificando que \( \lim_{y \to \infty} \left[ \lim_{\beta \to \infty} \frac{d}{dy} \ln h_Y(y) \right] = -1 \), y luego use la relación asintótica entre \( h_Y(y) \) y \( e_Y(y) \) para evaluar \( e_Y(y) \) en el intervalo [0, ∞) y analizar su comportamiento para \( \tau > 1 \) y para \( \tau < 1 \)).
