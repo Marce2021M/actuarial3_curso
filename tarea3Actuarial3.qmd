@@ -140,25 +140,82 @@ ggplot() +
 
 
 
-# Colas de las distribuciones
+# Ejercicio 4: Colas de las distribuciones
 
-Suponga que \( X \sim \text{Pareto}(\alpha, \theta) \) y \( Y \sim \text{Gamma}(\tau, \beta) \).
+Suponga que $X \sim \text{Pareto}(\alpha, \theta)$ y  $Y \sim \text{Gamma}(\tau, \beta)$.
 
-## Comportamiento límite de la cola
-
-a) Utilice el criterio del comportamiento límite de la cola para demostrar que la Distribución Pareto tiene una cola más pesada que la Distribución Gamma.
 
 ## Comparación de distribuciones
 
 b) Para comparar de manera más justa ambas distribuciones, queremos que ambas tengan media 5 y varianza 75.
 
-i) Encuentre los valores de \( \alpha \), \( \theta \), \( \tau \), y \( \beta \).
+i) Encuentre los valores de $\alpha$, $\theta$, $\tau$, y $\beta$.
+
+```{r}
+
+#Calculamos los parámetros de la pareto
+varianza <- 75
+
+esperanza <- 5
+
+aux1 <- varianza/(esperanza^2) +1
+
+aux2 <- varianza/(esperanza^3) -1/esperanza
+
+theta <- aux1/aux2
+
+alpha <- theta/esperanza + 1
+
+#Calculamos los parámetros de la gamma
+
+tau <- (esperanza^2)/varianza
+
+beta <- varianza/esperanza
+
+```
+
+Los valores de los parámetros son:
+
+- $\alpha = `r alpha`$
+- $\theta = `r theta`$
+- $\tau = `r tau`$
+- $\beta = `r beta`$
+
+
 ii) Compare en la misma gráfica ambas funciones de densidad. ¿Qué conclusiones se pueden derivar?
 
-## Criterio de la tasa de riesgo
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(actuar)
 
-c) Utilice el criterio de la tasa de riesgo para demostrar que la Distribución Pareto tiene cola pesada.
+library(ggplot2)
 
-## Función de media de pérdida en exceso
+# Define parameters for the Pareto distribution
+b <- alpha
+scale_pareto <- theta
 
-d) Demuestre que la Distribución Gamma tiene cola ligera si \( \tau > 1 \), pero pesada si \( \tau < 1 \). (*Sugerencia:* Comience verificando que \( \lim_{y \to \infty} \left[ \lim_{\beta \to \infty} \frac{d}{dy} \ln h_Y(y) \right] = -1 \), y luego use la relación asintótica entre \( h_Y(y) \) y \( e_Y(y) \) para evaluar \( e_Y(y) \) en el intervalo [0, ∞) y analizar su comportamiento para \( \tau > 1 \) y para \( \tau < 1 \)).
+# Define parameters for the Gamma distribution
+a <- tau
+scale_gamma <- beta
+
+# Create x values
+x <- seq(0, 5, length.out = 1000)
+
+# Compute PDFs
+pdf_pareto <- dpareto(x, shape = b, scale = scale_pareto)
+pdf_gamma <- dgamma(x, shape = a, scale = scale_gamma)
+
+# Create data frame for ggplot
+df <- data.frame(x, pdf_pareto, pdf_gamma)
+
+# Plot both distributions on the same graph using ggplot
+ggplot(df, aes(x)) + 
+  geom_line(aes(y = pdf_pareto, color = paste("Pareto b=", b))) +
+  geom_line(aes(y = pdf_gamma, color = paste("Gamma a=", a, ", scale=", scale_gamma))) +
+  labs(title = "Pareto vs Gamma Distributions", y = "Density", color = "Distribution") +
+  theme_minimal() +
+  coord_cartesian(ylim = c(0, 0.5))  # set y-axis limit here
+
+```
+
+
+Se puede derivar que la gamma acumula más que la pareto para valores cercanos a cero (aún teniendo la misma varianza y media), por lo que la pareto tiene cola más pesada que la gamma.
