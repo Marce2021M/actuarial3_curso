@@ -219,3 +219,219 @@ ggplot(df, aes(x)) +
 
 
 Se puede derivar que la gamma acumula más que la pareto para valores cercanos a cero (aún teniendo la misma varianza y media), por lo que la pareto tiene cola más pesada que la gamma.
+
+# Ejercicio 5
+
+Verosimilitud para datos agrupados. Suponga que las pérdidas de cierto riesgo siguen una distribución con función de distribución acumulada $F(x) = (1 - \frac{\theta}{x})I(\theta, \infty)(x)$, donde $\theta > 0$. Una muestra aleatoria de 20 siniestros contiene 9 pérdidas por debajo de 10 mil dólares, 6 pérdidas entre 10 y 25 mil dólares y 5 pérdidas que exceden los 25 mil dólares. Encuentre el estimador de máxima verosimilitud de $\theta$. [10]
+
+Por principio de máxima verosimilitud tenemos que el logaritmo de la función de verosimilitud para datos agrupados está dada por:
+
+$$\ln(L(\theta)) = 9 \ln\left( F(10000, \theta) - F(0, \theta) \right) + 6 \ln\left( F(25000, \theta) - F(10000, \theta) \right)$$
+
+$$+5\ln\left( 1 - F(25000, \theta)\right)$$
+
+
+```{r}
+
+acumulada <- function(x, theta){
+  if(x > theta){
+    resultado = 1 - (theta/x)
+  }else{
+    resultado = 0
+  }
+  return(resultado)
+}
+
+
+verosimilitud <- function(theta){
+  resultado <- 9*log(acumulada(10000, theta)-acumulada(0,theta)) + 6*log(acumulada(25000, theta)-acumulada(10000,theta)) + 5*log(1-acumulada(25000,theta))
+  return(resultado)
+}
+
+neg_verosimilitud <- function(theta) {
+  return(-verosimilitud(theta))
+}
+
+# Usamos la función optimize para encontrar el valor de theta que maximiza la verosimilitud
+# Establece un rango razonable para theta basado en tu conocimiento del problema
+resultado <- optimize(neg_verosimilitud, interval=c(0, 9000))
+
+```
+
+El valor de $\theta$ que maximiza la verosimilitud numéricamente es `r resultado$minimum` .
+
+# Ejercicio 6
+
+Ajuste para datos agrupados. A continuación se presenta la distribución de frecuencias de una muestra de 250 pérdidas de un seguro de hogar.
+
+| Pérdida (miles de pesos) | Frecuencia |
+|--------------------------|------------|
+| 0 - 50                   | 3          |
+| 50 - 150                 | 54         |
+| 150 - 300                | 62         |
+| 300 - 500                | 43         |
+| 500 - 1,000              | 39         |
+| 1,000 - 2,000            | 24         |
+| 2,000 - 4,000            | 11         |
+| 4,000 - 8,000            | 9          |
+| 8,000 - 16,000           | 4          |
+| Más de 16,000            | 1          |
+| **Total**                | **250**    |
+
+a) Construya el histograma de frecuencias relativas respectivo. Note que las clases son de distinta longitud. [10]
+
+```{r}
+# Crea un vector con los límites de las clases
+
+clases <- c(0, 50, 150, 300, 500, 1000, 2000, 4000, 8000, 16000, 24000)
+
+# Crea un vector con las frecuencias
+
+frecuencias <- c(3, 54, 62, 43, 39, 24, 11, 9, 4, 1)
+
+# Crea un vector con las frecuencias relativas
+
+frecuencias_relativas <- frecuencias/sum(frecuencias)
+
+# Crea un vector con las longitudes de las clases
+
+longitudes_clases <- diff(clases)
+
+
+# Crea un vector con los factores de ajuste
+
+factores_ajuste <- 1/longitudes_clases
+
+# Crea un vector con las frecuencias relativas ajustadas
+
+frecuencias_relativas_ajustadas <- frecuencias_relativas * factores_ajuste
+
+# Crea un vector con las frecuencias relativas corregidas
+
+frecuencias_relativas_corregidas <- frecuencias_relativas_ajustadas/sum(frecuencias_relativas_ajustadas)
+
+# Crea un vector con los puntos medios de las clases
+
+puntos_medios_clases <- (clases[-1] + clases[-length(clases)])/2
+
+# Crea un data frame con los datos
+
+df <- data.frame( frecuencias, frecuencias_relativas, frecuencias_relativas_ajustadas, frecuencias_relativas_corregidas, puntos_medios_clases)
+
+
+# Grafica el histograma
+gg1 <-ggplot(df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas)) +
+  geom_bar(width = longitudes_clases, stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = frecuencias), vjust = -0.5) +
+  ggtitle("Histograma de frecuencias relativas") +
+  xlab("Pérdida (miles de pesos)") +
+  ylab("Frecuencia relativa") +
+  theme_minimal()
+
+gg1
+
+ggplot(df[1:6, ], aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas)) +
+  geom_bar(width = longitudes_clases[1:6], stat = "identity", fill = "steelblue") +
+  geom_text(aes(label = round(frecuencias_relativas_corregidas,digits = 5)), vjust = -0.5) +
+  ggtitle("Histograma de frecuencias relativas (primeras 8 clases)") +
+  xlab("Pérdida (miles de pesos)") +
+  ylab("Frecuencia relativa") +
+  xlim(c(0, 2000)) +  # Limitar el eje x hasta un poco después de 8,000
+  theme_minimal()
+
+
+
+
+
+```
+
+
+
+b) A partir de los datos agrupados, ajuste por máxima verosimilitud la Distribución Exponencial Inversa con función de distribución acumulada 
+$F(x) = e^{-\frac{\theta}{x}} I(0,\infty)(x), \quad \theta > 0$.
+Especifique $\hat{\theta}$ y grafique la densidad ajustada junto con el histograma del inciso anterior. [10]
+
+
+Por principio de máxima verosiimilitud tenemos que el logaritmo de la función de verosimilitud para datos agrupados está dada por:
+
+$$\ln(L(\theta)) = \sum_{i=1}^{10} n_i \ln\left( F(b_i, \theta) - F(a_i, \theta) \right)$$
+
+```{r}
+acumulada <- function(x, theta){
+  if(x > 0){
+    resultado = exp(-theta/x)
+  }else{
+    resultado = 0
+  }
+  return(resultado)
+}
+
+
+verosimilitud <- function(theta){
+  for(i in 1:10){
+    if(i == 1){
+      resultado <- frecuencias[i]*log(acumulada(clases[i+1], theta)-acumulada(clases[i],theta))
+    }else{
+      resultado <- resultado + frecuencias[i]*log(acumulada(clases[i+1], theta)-acumulada(clases[i],theta))
+    }
+  }
+  return(resultado)
+}
+
+neg_verosimilitud <- function(theta) {
+  return(-verosimilitud(theta))
+}
+
+# Usamos la función optimize para encontrar el valor de theta que maximiza la verosimilitud
+# Establece un rango razonable para theta basado en tu conocimiento del problema
+resultado <- optimize(neg_verosimilitud, interval=c(0, 9000))
+
+
+
+# Compute likelihoods
+
+d_gamma_inv <- function(x, theta) {
+  ifelse(x > 0, (theta / (x^(2))) * exp(-theta/x),0)
+}
+
+# Valores de x
+x_vals <- seq(0, 24000, by = 100)
+
+# Calcular la función de densidad para estos valores
+y_vals <- sapply(x_vals, d_gamma_inv, theta =resultado$minimum )
+
+# Graficar
+
+data_to_plot2 <- data.frame(x = x_vals, y = y_vals)
+
+ggplot(data_to_plot2, aes(x = x, y = y)) +
+  geom_line(color = "blue") +
+  ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
+  xlab("x") +
+  ylab("f(x)") +
+  theme_minimal() 
+
+# Primero, configura el ggplot base
+plot_base <- ggplot() + 
+  theme_minimal() +
+  xlab("x") + ylab("f(x)")
+
+# Luego, añade las diferentes capas a este ggplot base
+final_plot <- plot_base +
+  geom_line(data = data_to_plot2, aes(x = x, y = y), color = "red") +
+  ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
+  geom_bar(data = df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas, width = longitudes_clases), stat = "identity", fill = "steelblue")
+
+# Finalmente, muestra el gráfico
+print(final_plot)
+
+
+
+
+
+
+
+
+```
+
+El valor de $\theta$ que maximiza la verosimilitud numéricamente es `r resultado$minimum` .
