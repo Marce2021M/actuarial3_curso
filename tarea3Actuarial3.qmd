@@ -447,12 +447,111 @@ Ajuste de una mezcla. Con base en 180 pérdidas de un seguro de vehículos que c
 automóviles y motocicletas se construyó el siguiente histograma:
 
 ```{r}
+library(readxl)
+library(kableExtra)
+ruta <- paste0(getwd(), "/bases/Tarea 3.xlsx")
+datosPerdida <- read_excel(ruta, sheet = "7", range = "A8:B188")
 
+hist(datosPerdida$Pérdida)
 ```
 
 Se quiere ajustar una mezcla de distribuciones Ji-Cuadradas con medias $\nu$ y $2\nu$ con ponderadores $\alpha$ y $1-\alpha$, respectivamente, donde $\nu \in \mathbb{Z^+}$ y $0 < \alpha < 1$.
 
 **a)** A partir de los datos individuales, escriba la función de densidad de la mezcla y verifique que los EMV son $\hat{\alpha} = 0.2468$ y $\hat{\nu} = 30$. (Sugerencia: Optimice numéricamente respecto a ambos parámetros, luego fije $\hat{\nu}$ al entero más cercano y maximice nuevamente para obtener $\hat{\alpha}$). [15]
+
+Primero notamos que la función de verosimilitud está dada por:
+
+$$
+L(\nu, \alpha)= \prod_{i=1}^{180} \left[ \alpha \frac{x^{\frac{\nu}{2}-1} e^{-\frac{x}{2}}}{2^{\frac{\nu}{2}} \Gamma\left(\frac{\nu}{2}\right)} + (1-\alpha)\frac{x^{\nu-1} e^{-\frac{x}{2}}}{2^{\nu} \Gamma(\nu)} \right]
+$$
+
+Por lo que el logaritmo de la función de verosimilitud está dado por:
+
+$$
+\ln(L(\nu, \alpha)) = \sum_{i=1}^{180} \left[ \ln\left( \alpha \frac{x^{\frac{\nu}{2}-1} e^{-\frac{x}{2}}}{2^{\frac{\nu}{2}} \Gamma\left(\frac{\nu}{2}\right)} + (1-\alpha)\frac{x^{\nu-1} e^{-\frac{x}{2}}}{2^{\nu} \Gamma(\nu)} \right) \right]
+$$
+
+
+
+```{r}
+mezclaFuncion <- function(x, alpha , nu){
+  resultado <- alpha*dgamma(x, shape = nu/2, scale = 2) + (1-alpha)*dgamma(x, shape = nu, scale = 2)
+  return(resultado)
+}
+
+verosimilitud <- function(alpha,nu){
+  for(i in 1:180){
+    if(i == 1){
+      resultado <- log(mezclaFuncion(datosPerdida$Pérdida[i], alpha, nu))
+    }else{
+      resultado <- resultado + log(mezclaFuncion(datosPerdida$Pérdida[i], alpha, nu))
+    }
+  }
+  return(resultado)
+}
+
+neg_verosimilitud <- function(theta) {
+  return(-verosimilitud(theta))
+}
+
+# Usamos la función optimize para encontrar el valor de theta que maximiza la verosimilitud
+# Establece un rango razonable para theta basado en tu conocimiento del problema
+
+
+
+
+# Compute likelihoods
+
+d_gamma_inv <- function(x, theta) {
+  ifelse(x > 0, (theta / (x^(2))) * exp(-theta/x),0)
+}
+
+# Valores de x
+x_vals <- seq(0, 24000, by = 100)
+
+# Calcular la función de densidad para estos valores
+y_vals <- sapply(x_vals, d_gamma_inv, theta =resultado$minimum )
+
+# Graficar
+
+data_to_plot2 <- data.frame(x = x_vals, y = y_vals)
+
+ggplot(data_to_plot2, aes(x = x, y = y)) +
+  geom_line(color = "blue") +
+  ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
+  xlab("x") +
+  ylab("f(x)") +
+  theme_minimal() 
+
+# Primero, configura el ggplot base
+plot_base <- ggplot() + 
+  theme_minimal() +
+  xlab("x") + ylab("f(x)")
+
+# Supongo que plot_base y los otros datasets ya están definidos
+
+# Calcula el factor de transformación. Este factor se basará en la relación entre los rangos máximos de tus datos.
+max_y_data_to_plot2 <- max(data_to_plot2$y)
+max_df <- max(df$frecuencias_relativas_corregidas)
+
+# Factor de transformación
+trans_factor <- max_y_data_to_plot2 / max_df
+
+final_plot <- plot_base +
+  # Primero traza el histograma
+  geom_bar(data = df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas, width = longitudes_clases), stat = "identity", fill = "steelblue") +
+  # Luego traza la línea, pero multiplica los valores por el factor de transformación
+  geom_line(data = data_to_plot2, aes(x = x, y = y / trans_factor), color = "red") +
+  ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
+  # Añade el eje secundario, dividiendo por el factor de transformación para mostrar los valores reales
+  scale_y_continuous(sec.axis = sec_axis(~./trans_factor, name = "Eje secundario"))
+
+# Finalmente, muestra el gráfico
+print(final_plot)
+
+
+
+```
 
 **b)** Grafique la función de densidad ajustada junto con el histograma de frecuencias relativas y obtenga los EMV de las modas. [15]
 
@@ -470,3 +569,4 @@ dólares) de 60 siniestros correspondientes a una póliza de incendio:
 **d)** Aplique la Prueba Kolmogorov-Smirnov para validar el ajuste Lognormal del inciso b). Considere un tamaño de error tipo I del 5%. [10]
 
 **e)** Aplique la Prueba Ji-Cuadrada para validar el ajuste Lognormal del inciso b). Considere la partición del inciso a) y agregue 2 clases (inicial y final) para abarcar todo el soporte de la Lognormal. Calcule el valor-p para concluir. [10]
+
