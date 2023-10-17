@@ -416,22 +416,57 @@ plot_base <- ggplot() +
   theme_minimal() +
   xlab("x") + ylab("f(x)")
 
-# Luego, añade las diferentes capas a este ggplot base
+# Supongo que plot_base y los otros datasets ya están definidos
+
+# Calcula el factor de transformación. Este factor se basará en la relación entre los rangos máximos de tus datos.
+max_y_data_to_plot2 <- max(data_to_plot2$y)
+max_df <- max(df$frecuencias_relativas_corregidas)
+
+# Factor de transformación
+trans_factor <- max_y_data_to_plot2 / max_df
+
 final_plot <- plot_base +
-  geom_line(data = data_to_plot2, aes(x = x, y = y), color = "red") +
+  # Primero traza el histograma
+  geom_bar(data = df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas, width = longitudes_clases), stat = "identity", fill = "steelblue") +
+  # Luego traza la línea, pero multiplica los valores por el factor de transformación
+  geom_line(data = data_to_plot2, aes(x = x, y = y / trans_factor), color = "red") +
   ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
-  geom_bar(data = df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas, width = longitudes_clases), stat = "identity", fill = "steelblue")
+  # Añade el eje secundario, dividiendo por el factor de transformación para mostrar los valores reales
+  scale_y_continuous(sec.axis = sec_axis(~./trans_factor, name = "Eje secundario"))
 
 # Finalmente, muestra el gráfico
 print(final_plot)
 
-
-
-
-
-
-
-
 ```
 
 El valor de $\theta$ que maximiza la verosimilitud numéricamente es `r resultado$minimum` .
+
+# Ejercicio 7
+
+Ajuste de una mezcla. Con base en 180 pérdidas de un seguro de vehículos que cubre
+automóviles y motocicletas se construyó el siguiente histograma:
+
+```{r}
+
+```
+
+Se quiere ajustar una mezcla de distribuciones Ji-Cuadradas con medias $\nu$ y $2\nu$ con ponderadores $\alpha$ y $1-\alpha$, respectivamente, donde $\nu \in \mathbb{Z^+}$ y $0 < \alpha < 1$.
+
+**a)** A partir de los datos individuales, escriba la función de densidad de la mezcla y verifique que los EMV son $\hat{\alpha} = 0.2468$ y $\hat{\nu} = 30$. (Sugerencia: Optimice numéricamente respecto a ambos parámetros, luego fije $\hat{\nu}$ al entero más cercano y maximice nuevamente para obtener $\hat{\alpha}$). [15]
+
+**b)** Grafique la función de densidad ajustada junto con el histograma de frecuencias relativas y obtenga los EMV de las modas. [15]
+
+# Ejercicio 8
+
+Pruebas de bondad de ajuste. A continuación se muestran los montos (en miles de
+dólares) de 60 siniestros correspondientes a una póliza de incendio:
+
+**a)** Construya un histograma de frecuencias relativas con 6 clases de igual longitud entre $30,000$ y $90,000$ dólares. ¿Qué distribuciones paramétricas podrían ajustar a este perfil de siniestros? [10]
+
+**b)** Si se decide ajustar una Distribución Lognormal con parámetros $\mu \in \mathbb{R}$ y $\sigma^2 > 0$, calcule sus respectivos EMV. Grafique la función de distribución acumulada ajustada junto con la Ojiva. ¿Qué puede concluir? (Sugerencia: Recuerde que estos estimadores fueron deducidos en el Ejercicio E19). [10]
+
+**c)** Construya la Gráfica de Probabilidad para el ajuste del inciso b). ¿Qué puede concluir? [10]
+
+**d)** Aplique la Prueba Kolmogorov-Smirnov para validar el ajuste Lognormal del inciso b). Considere un tamaño de error tipo I del 5%. [10]
+
+**e)** Aplique la Prueba Ji-Cuadrada para validar el ajuste Lognormal del inciso b). Considere la partición del inciso a) y agregue 2 clases (inicial y final) para abarcar todo el soporte de la Lognormal. Calcule el valor-p para concluir. [10]
