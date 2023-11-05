@@ -813,4 +813,381 @@ Selección de modelos. A continuación se muestra el diagrama de tallo y hojas d
 de las reclamaciones de un seguro que cubre daños ocasionados por fenómenos
 hidrometeorológicos:
 
+```{r}
+datos <- read_excel(ruta, sheet = "9", range = "M7:N23")
+```
 
+a) Suponga que se quiere ajustar una Distribución Gamma con media $\mu = \alpha\theta$.
+
+i) Calcule los EMV de $\alpha$ y $\theta$. (Sugerencia: Recuerde que en el Ejercicio E14 se obtuvieron estos estimadores o utilice EViews para obtenerlos). [5]
+
+Recordemos que la log de la función de máxima verosimilitud está dada por:
+
+$$\ln L(\alpha, \theta) = (\alpha -1 )*\sum_{i=1}^{n}\ln (x_i)- \sum_{i=1}^{n} \frac{x_{i}}{\theta} -n \ln(\Gamma(\alpha))-n\alpha \ln(\theta)$$
+
+Y derivando parcialmente con respecto a cada parámetro obtenemos las siguientes ecuaciones:
+
+$$\sum_{i=1}^{n}\ln (x_i)-n\frac{\Gamma'(\alpha)}{\Gamma(\alpha)}-n\ln(\theta)=0$$
+
+$$\frac{\sum_{i=1}^{n}x_i}{\theta^{2}}-n\frac{\alpha}{\theta}=0$$
+
+Con lo cual simplificando obtenemos que 
+
+$$\theta=\frac{\bar{x}}{\alpha}$$
+
+$$\sum_{i=1}^{n}\ln (x_i)-n\frac{\Gamma'(\alpha)}{\Gamma(\alpha)}-n\ln(\theta)=0$$
+
+Es decir, solo hay que utilizar un método numérico para encontrar el valor de $\alpha$ que cumple la segunda ecuación y con ese valor encontrar el valor de $\theta$.
+
+```{r}
+# Definir la función que representa la segunda ecuación
+funcion_objetivo <- function(alpha, x) {
+  n <- length(x)
+  sum(log(x)) - n * digamma(alpha) - n * log(mean(x) / alpha)
+}
+
+# Usar uniroot para encontrar el valor de alpha
+# Es importante dar un intervalo donde se espera encontrar la raíz (alpha)
+resultado <- uniroot(funcion_objetivo, interval = c(0.001, 100), x = datos$Monto)
+
+# El valor de alpha
+alpha_estimado <- resultado$root
+
+# Ahora calcular theta usando la relación dada
+theta_estimado <- mean(datos$Monto) / alpha_estimado
+
+```
+
+Con lo cual los valores de $\hat{\alpha}$ y $\hat{\theta}$ son `r alpha_estimado` y `r theta_estimado` respectivamente.
+
+ii) Obtenga el Gráfico Cuantil-Cuantil para el ajuste de la distribución Gamma. ¿Qué puede concluir? (Sugerencia: Utilice EViews). [5]
+
+```{r}
+library(ggplot2)
+
+# Ordena tus datos y calcula los cuantiles empíricos
+datos$empirical <- sort(datos$Monto)
+datos$theoretical <- qgamma(ppoints(length(datos$Monto)), shape = alpha_estimado, rate = theta_estimado)
+
+# Crea el gráfico Q-Q
+ggplot(datos, aes(x = theoretical, y = empirical)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
+  labs(title = "Q-Q Plot for Gamma Distribution",
+       x = "Theoretical Quantiles",
+       y = "Sample Quantiles") +
+  theme_minimal()
+
+
+
+```
+
+AJUSTAR QQPLOT(CHECAR)
+
+iii) Aplique la Prueba de Razón de Verosimilitudes con un nivel de significancia del 5% para determinar si el monto de las reclamaciones corresponde a una Gamma con media $\mu_0 = 2$. (Sugerencia: Note que a pesar de que la distribución Gamma tiene 2 parámetros, la prueba se debe hacer sólo con un parámetro pues $T(\mu) = (\alpha, \theta) = \alpha\theta$, con $T: \mathbb{R}^2 \rightarrow \mathbb{R}$. No olvide obtener el EMV restringido considerando el valor de $H_0$). [15]
+
+```{r}
+logverosimilitud <- function(alpha, theta, x) {
+  n <- length(x)
+  resultado <- (alpha - 1) * sum(log(x)) - sum(x / theta) - n * log(gamma(alpha)) - n * alpha * log(theta)
+  return(resultado)
+}
+
+logverosimilitud_restringida <- function(alpha, x) {
+  n <- length(x)
+  theta <- 2 / alpha
+  resultado <- (alpha - 1) * sum(log(x)) - sum(x / theta) - n * log(gamma(alpha)) - n * alpha * log(theta)
+  return(resultado)
+}
+
+# Obtener el EMV restringido
+
+neg_logverosimilitud_restringida <- function(alpha, x) {
+  -logverosimilitud_restringida(alpha, x)
+}
+
+resultado_optim <- optim(
+  par = 1,
+  fn = neg_logverosimilitud_restringida,
+  x = datos$Monto,
+  method = "L-BFGS-B",
+  lower = 0.00001, # Límite inferior para alpha
+  upper = 100  # Límite superior para alpha
+)
+
+alpha_restringido <- resultado_optim$par
+theta_restringido <- 2 / alpha_restringido
+
+logverosimilitud_restringida <- logverosimilitud(alpha_restringido, theta_restringido, datos$Monto)
+
+logverosimilitud_original <- logverosimilitud(alpha_estimado, theta_estimado, datos$Monto)
+
+LR_test <- 2 * (logverosimilitud_original -  logverosimilitud_restringida)
+
+valorptest <- 1 - pchisq(LR_test, df = 1)
+
+```
+
+Con lo cual obtuvimos que el valor de la razón de verosimilitudes es `r LR_test` y el valor-p es `r valorptest`. Por lo que no se rechaza la hipótesis nula de que el monto de las reclamaciones corresponde a una Gamma con media $\mu_0 = 2$.
+
+b) Suponga que se quiere ajustar una distribución Weibull $(\gamma, \theta)$, $\gamma > 0$ y $\theta > 0$.
+
+Primero notemos que la función de verosimilitud está dada por:
+
+$$L(\theta, \gamma)= \frac{\gamma^{n}}{\theta^{\gamma n}}\left(\Pi_{i=1}^{n}x_{i}\right)^{\gamma-1}e^{-\sum_{i=1}^{n}(\frac{x_{i}}{\theta})^{\gamma}}$$
+
+Con lo cual la log-verosimilitud está dada por:
+
+$$\ln L(\theta, \gamma)= n\ln(\gamma)-\gamma n\ln(\theta)+(\gamma-1)\sum_{i=1}^{n}\ln(x_{i})-\sum_{i=1}^{n}\left(\frac{x_{i}}{\theta}\right)^{\gamma}$$
+
+i) Obtenga los EMV de $\gamma$ y $\theta$. Calcule su log-verosimilitud y grafique la f.d.a. empírica y la f.d.a. ajustada. ¿Qué puede concluir? [10]
+
+```{r}
+#Tambien se pudo usar de MASS  fitdistr(x, densfun, start, ...)
+logveromisimilitud <- function(x, theta, gamma) {
+  n <- length(x)
+  resultado <- n * log(gamma) - gamma * n * log(theta) + (gamma - 1) * sum(log(x)) - sum((x / theta)^gamma)
+  return(resultado)
+}
+
+neg_logverosimilitud <- function(params, x) {
+  theta <- params[1]
+  gamma <- params[2]
+  -logveromisimilitud(x, theta, gamma)
+}
+
+# Valores iniciales para theta y gamma
+valores_iniciales <- c(theta = 1, gamma = 1)
+
+# Límites para theta y gamma
+limites <- list(c(0.00001, 100), c(0.00001, 100))
+
+# Utilizar optim con el método "L-BFGS-B" para encontrar los parámetros óptimos
+
+resultado_optim <- optim(
+  par = valores_iniciales,
+  fn = neg_logverosimilitud,
+  x = datos$Monto,
+  method = "L-BFGS-B",
+  lower = sapply(limites, `[`, 1), # Límites inferiores
+  upper = sapply(limites, `[`, 2)  # Límites superiores
+)
+
+# Los parámetros optimizados
+
+theta_estimado <- resultado_optim$par[1]
+gamma_estimado <- resultado_optim$par[2]
+
+logver1 <- logveromisimilitud(datos$Monto, theta_estimado, gamma_estimado)
+
+```
+
+Con lo cual los valores de $\hat{\theta}$ y $\hat{\gamma}$ son `r theta_estimado` y `r gamma_estimado` respectivamente. Además, el valor de la log-verosimilitud es `r logveromisimilitud(datos$Monto, theta_estimado, gamma_estimado)`. 
+
+Ahora graficaremos la f.d.a. empírica y la f.d.a. ajustada.
+
+```{r}
+# Crear un nuevo dataframe con valores para las funciones de distribución acumulativa
+n <- 100
+valores <- seq(0, 4, length.out = n)
+df_weibull <- data.frame(
+  Monto = valores,
+  FittedWeibull = pweibull(valores, shape = gamma_estimado, scale = theta_estimado)
+)
+
+# Crear la distribución empírica acumulada (ECDF)
+df_empirica <- data.frame(
+  Monto = valores,
+  Empirical = ecdf(datos$Monto)(valores)
+)
+
+# Combinar ambos dataframes
+df_combined <- merge(df_weibull, df_empirica, by = "Monto")
+
+# Gráfico con ggplot2
+ggplot() +
+  geom_step(aes(x = Monto, y = Empirical), data = df_empirica, color = "blue") +
+  geom_line(aes(x = Monto, y = FittedWeibull), data = df_weibull, color = "red") +
+  labs(title = "Weibull vs. Empirical Cumulative Distribution",
+       x = "Monto",
+       y = "CDF") +
+  theme_minimal() +
+  scale_x_continuous(expand = c(0, 0)) + 
+  scale_y_continuous(expand = c(0, 0))
+```
+
+Al parecer fue un buen ajuste pues la f.d.a. ajustada se parece mucho a la f.d.a. empírica. Pero cabe señalar que la f.d.a. ajustada sobreestima poco antes de 1.5 y mayor a 2.3 aproximadamente, y subestima en los otros casos.
+
+ii) Para el ajuste del inciso anterior aplique las pruebas Kolmogorov-Smirnov y Anderson-Darling considerando un nivel de significancia del 5%. (Sugerencia: Utilice EViews). [5]
+
+```{r}
+# Realizar la prueba de Kolmogorov-Smirnov
+ks_result <- ks.test(datos$Monto, "pweibull", shape = gamma_estimado, scale = theta_estimado)
+
+print(ks_result)
+
+# Realizar la prueba de Anderson-Darling
+library(ADGofTest)
+# Define una función de distribución acumulada para la Weibull con tus parámetros estimados
+pweibull_with_params <- function(q) {
+  pweibull(q, shape = gamma_estimado, scale = theta_estimado)
+}
+
+# Realiza la prueba de Anderson-Darling usando tu vector de datos y la función de distribución definida
+ad_result <- ADGofTest::ad.test(datos$Monto, pweibull_with_params)
+
+# Ver los resultados de la prueba
+print(ad_result)
+```
+
+En las dos pruebas no se rechaza la hipótesis nula de que la distribución de los datos es Weibull. Por lo que fue un buen ajuste.
+
+iii) Suponga que $\gamma = 3$ y que se aplica un deducible de 1.5 millones de dólares. Obtenga en este caso el EMV de $\theta$ y calcule su log-verosimilitud. [10]
+
+En este caso solo notemos que ahora la función de verosimilitud está dada por:
+
+$$L(\theta)=\frac{ \frac{3^{n}}{\theta^{3 n}}\left(\Pi_{i=1}^{n}x_{i}\right)^{2}e^{-\sum_{i=1}^{n}(\frac{x_{i}}{\theta})^{3}}}{ e^{(\frac{1.5}{\theta})^{3n}}}$$
+
+Con lo cual la log-verosimilitud está dada por:
+
+$$\ln L(\theta)= n\ln(3)-3 n\ln(\theta)+2\sum_{i=1}^{n}\ln(x_{i})-\sum_{i=1}^{n}\left(\frac{x_{i}}{\theta}\right)^{3}+n\left(\frac{1.5}{\theta}\right)^{3}$$
+
+Considerando que ahora $n$ es el número de datos mayores al deducible, los demás los ignoramos.
+
+```{r}
+datosDeducible <- datos[datos$Monto >= 1.5,]
+
+# logVerosimilitud
+
+logveromisimilitud <- function(x, theta) {
+  n <- length(x)
+  resultado <- n * log(3) - 3 * n * log(theta) + (3 - 1) * sum(log(x)) - sum((x / theta)^3)+n*(1.5/theta)^3
+  return(resultado)
+}
+
+neglogverosimilitud <- function(params, x) {
+  theta <- params[1]
+  -logveromisimilitud(x, theta)
+}
+
+# Valores iniciales para theta
+valores_iniciales <- 1
+
+# Límites para theta
+limites <- list(c(0.00001, 100))
+
+# Utilizar optim con el método "L-BFGS-B" para encontrar los parámetros óptimos
+
+resultado_optim <- optim(
+  par = valores_iniciales,
+  fn = neglogverosimilitud,
+  x = datosDeducible$Monto,
+  method = "L-BFGS-B",
+  lower = sapply(limites, `[`, 1), # Límites inferiores
+  upper = sapply(limites, `[`, 2)  # Límites superiores
+)
+
+# Los parámetros optimizados
+
+theta_estimado <- resultado_optim$par[1]
+logver2 <- logveromisimilitud(datosDeducible$Monto, theta_estimado)
+```
+
+Por lo tanto, el valor de $\hat{\theta}$ es `r theta_estimado` y el valor de la log-verosimilitud es `r logveromisimilitud(datosDeducible$Monto, theta_estimado)`.
+
+
+iv) Suponga que $\gamma = 3$ y que no se aplica deducible pero se establece un límite de aseguramiento de 2.5 millones de pesos. Obtenga en este caso el EMV de $\theta$ y calcule su log-verosimilitud. [10]
+
+En este caso la función de verosimilitud está dada por:
+
+$$L(\theta)=\frac{3^{m_1}}{\theta^{3 m_1}}\left(\Pi_{i=1}^{m_1}x_{i}\right)^{2}e^{-\sum_{i=1}^{m_1}(\frac{x_{i}}{\theta})^{3}}(e^{-\sum_{i=1}^{m_2}(\frac{2.5}{\theta})^{3}})$$
+
+donde $m_1$ es el número de datos menores al límite de aseguramiento y $m_2$ es el número de datos mayores al límite de aseguramiento.
+
+Y por lo tanto la log-verosimilitud está dada por:
+
+$$\ln L(\theta)= m_1\ln(3)-3 m_1\ln(\theta)+2\sum_{i=1}^{m_1}\ln(x_{i})-\sum_{i=1}^{m_1}\left(\frac{x_{i}}{\theta}\right)^{3}-\sum_{i=1}^{m_2}\left(\frac{2.5}{\theta}\right)^{3}$$
+
+
+
+
+
+```{r}
+
+logveromisimilitud <- function(x, theta) {
+  n <- length(x)
+  xind <- x[x < 2.5]
+  xout <- x[x >= 2.5]
+  m1 <- length(xind)
+  m2 <- length(xout)
+  resultado <- m1 * log(3) - 3 * m1 * log(theta) + (3 - 1) * sum(log(xind)) - sum((xind / theta)^3)-m2*(2.5 / theta)^3
+  return(resultado)
+}
+
+neglogverosimilitud <- function(params, x) {
+  theta <- params[1]
+  -logveromisimilitud(x, theta)
+}
+
+# Valores iniciales para theta
+valores_iniciales <- 1
+
+# Límites para theta
+limites <- list(c(0.00001, 100))
+
+# Utilizar optim con el método "L-BFGS-B" para encontrar los parámetros óptimos
+
+resultado_optim <- optim(
+  par = valores_iniciales,
+  fn = neglogverosimilitud,
+  x = datos$Monto,
+  method = "L-BFGS-B",
+  lower = sapply(limites, `[`, 1), # Límites inferiores
+  upper = sapply(limites, `[`, 2)  # Límites superiores
+)
+
+# Los parámetros optimizados
+
+theta_estimado <- resultado_optim$par[1]
+logver3 <- logveromisimilitud(datos$Monto, theta_estimado)
+
+```
+
+Con lo cual el valor de $\hat{\theta}$ es `r theta_estimado` y el valor de la log-verosimilitud es `r logveromisimilitud(datos$Monto, theta_estimado)`.
+
+v) Calcule los Criterios de Información de Akaike, Schwartz y Hannan-Quinn para los modelos ajustados en los subincisos i), iii) y iv). ¿Cuál modelo se prefiere? Justifique brevemente su respuesta. [5]
+
+```{r}
+# Criterios
+akaike_criterio <- function(logverosimilitud, k, n) {
+  resultado <- (-2 * logverosimilitud + 2 * k)/n
+  return(resultado)
+}
+
+schwartz_criterio <- function(logverosimilitud, k, n) {
+  resultado <- (-2 * logverosimilitud + 2 * log(n))/n
+  return(resultado)
+}
+
+hannan_quinn_criterio <- function(logverosimilitud, k, n) {
+  resultado <- (-2 * logverosimilitud + 2 * k * log(log(n)))/n
+  return(resultado)
+}
+
+
+```
+
+
+
+|                      | (i)                  | (ii)                 | (iii)                |
+|----------------------|----------------------|----------------------|----------------------|
+| n          | `r length(datos$Monto)`| `r length(datosDeducible$Monto)`| `r length(datos$Monto)`|
+| Log-verosimilitud    | `r logver1`         | `r logver2`        | `r logver3`       |
+| q                    | `r 2`              | `r 1`             | `r 1`            |
+| **Criterios de información** |                      |                      |                      |
+| Akaike | `r akaike_criterio(logver1,2,length(datos$Monto))` | `r akaike_criterio(logver2,1,length(datosDeducible$Monto))`| `r akaike_criterio(logver3,1,length(datos$Monto))`|
+| Schwartz             | `r schwartz_criterio(logver1,2,length(datos$Monto))`            | `r schwartz_criterio(logver2,1,length(datosDeducible$Monto))`           | `r schwartz_criterio(logver3,1,length(datos$Monto))`          |
+| Hannan-Quinn         | `r hannan_quinn_criterio(logver1,2,length(datos$Monto))`            | `r hannan_quinn_criterio(logver2,1,length(datosDeducible$Monto))`           | `r hannan_quinn_criterio(logver3,1,length(datos$Monto))`          |
+
+
+Notamos que el modelo que tiene menor valor en los 3 criterios de información es el modelo del inciso iii). Por lo que es el modelo que más se preferirá y el que mejor ajustó a los datos siguiendo cierta parsimonía con el número de parámetros que se estimaron. Es decir, el modelo con límite de aseguramiento (sin tomar en cuenta deducible) es mejor para poder ajustar los datos a una Weibull.
