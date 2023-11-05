@@ -473,87 +473,144 @@ $$
 
 
 
-```{r}
-mezclaFuncion <- function(x, alpha , nu){
-  resultado <- alpha*dgamma(x, shape = nu/2, scale = 2) + (1-alpha)*dgamma(x, shape = nu, scale = 2)
+```{r, warning=FALSE}
+# Optimizamos numéricamente respecto a ambos parámetros
+
+mezclaFuncion <- function(x, alpha, nu) {
+  alpha * dgamma(x, shape = nu/2, scale = 2) + (1 - alpha) * dgamma(x, shape = nu, scale = 2)+.00000001
+}
+
+verosimilitud <- function(alpha, nu, datos) {
+  log_mezcla <- log(mezclaFuncion(datos, alpha, nu))
+  resultado <- sum(log_mezcla)
   return(resultado)
 }
 
-verosimilitud <- function(alpha,nu){
-  for(i in 1:180){
-    if(i == 1){
-      resultado <- log(mezclaFuncion(datosPerdida$Pérdida[i], alpha, nu))
-    }else{
-      resultado <- resultado + log(mezclaFuncion(datosPerdida$Pérdida[i], alpha, nu))
-    }
-  }
-  return(resultado)
+neg_verosimilitud <- function(params, datos) {
+  alpha <- params[1]
+  nu <- params[2]
+  -verosimilitud(alpha, nu, datos)
 }
 
-neg_verosimilitud <- function(theta) {
-  return(-verosimilitud(theta))
+# Suponiendo que tienes un dataframe llamado datosPerdida con una columna 'Pérdida'
+datos <- datosPerdida$Pérdida
+
+# Valores iniciales para alpha y nu
+valores_iniciales <- c(alpha = 0.5, nu = 2)
+
+# Límites para alpha y nu
+# alpha está entre 0 y 1, y nu es mayor que 0
+limites <- list(c(0.000001, 10), c(1e-6, 50))
+
+# Utilizar optim con el método "L-BFGS-B" para encontrar los parámetros óptimos
+resultado_optim <- optim(
+  par = valores_iniciales,
+  fn = neg_verosimilitud,
+  datos = datos,
+  method = "L-BFGS-B",
+  lower = sapply(limites, `[`, 1), # Límites inferiores
+  upper = sapply(limites, `[`, 2)  # Límites superiores
+)
+
+# Los parámetros optimizados
+(alpha_optim <- resultado_optim$par[1])
+(nu_optim <- resultado_optim$par[2])
+
+# Optimizamos numéricamente respecto a alpha
+
+# Ahora neg_verosimilitud aceptará solo alpha ya que nu es fijo.
+neg_verosimilitud <- function(alpha, datos) {
+  nu <- 30  # Fijamos nu a 30
+  -verosimilitud(alpha, nu, datos)
 }
 
-# Usamos la función optimize para encontrar el valor de theta que maximiza la verosimilitud
-# Establece un rango razonable para theta basado en tu conocimiento del problema
+# Suponiendo que tienes un dataframe llamado datosPerdida con una columna 'Pérdida'
+datos <- datosPerdida$Pérdida
 
+# Valor inicial solo para alpha
+valor_inicial_alpha <- 0.5
 
+# Límite solo para alpha
+limites_alpha <- c(0.000001, 1)
 
+# Utilizar optim con el método "L-BFGS-B" para encontrar el parámetro óptimo de alpha
+resultado_optim <- optim(
+  par = valor_inicial_alpha,
+  fn = neg_verosimilitud,
+  datos = datos,
+  method = "L-BFGS-B",
+  lower = limites_alpha[1], # Límite inferior para alpha
+  upper = limites_alpha[2]  # Límite superior para alpha
+)
 
-# Compute likelihoods
-
-d_gamma_inv <- function(x, theta) {
-  ifelse(x > 0, (theta / (x^(2))) * exp(-theta/x),0)
-}
-
-# Valores de x
-x_vals <- seq(0, 24000, by = 100)
-
-# Calcular la función de densidad para estos valores
-y_vals <- sapply(x_vals, d_gamma_inv, theta =resultado$minimum )
-
-# Graficar
-
-data_to_plot2 <- data.frame(x = x_vals, y = y_vals)
-
-ggplot(data_to_plot2, aes(x = x, y = y)) +
-  geom_line(color = "blue") +
-  ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
-  xlab("x") +
-  ylab("f(x)") +
-  theme_minimal() 
-
-# Primero, configura el ggplot base
-plot_base <- ggplot() + 
-  theme_minimal() +
-  xlab("x") + ylab("f(x)")
-
-# Supongo que plot_base y los otros datasets ya están definidos
-
-# Calcula el factor de transformación. Este factor se basará en la relación entre los rangos máximos de tus datos.
-max_y_data_to_plot2 <- max(data_to_plot2$y)
-max_df <- max(df$frecuencias_relativas_corregidas)
-
-# Factor de transformación
-trans_factor <- max_y_data_to_plot2 / max_df
-
-final_plot <- plot_base +
-  # Primero traza el histograma
-  geom_bar(data = df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas, width = longitudes_clases), stat = "identity", fill = "steelblue") +
-  # Luego traza la línea, pero multiplica los valores por el factor de transformación
-  geom_line(data = data_to_plot2, aes(x = x, y = y / trans_factor), color = "red") +
-  ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
-  # Añade el eje secundario, dividiendo por el factor de transformación para mostrar los valores reales
-  scale_y_continuous(sec.axis = sec_axis(~./trans_factor, name = "Eje secundario"))
-
-# Finalmente, muestra el gráfico
-print(final_plot)
-
-
+# El parámetro optimizado para alpha
+alpha_optim <- resultado_optim$par
 
 ```
 
+Con lo cual obtenemos que $\hat{\alpha} = `r alpha_optim`$ y $\hat{\nu} = `r 30`$.
+
+
 **b)** Grafique la función de densidad ajustada junto con el histograma de frecuencias relativas y obtenga los EMV de las modas. [15]
+
+```{r}
+# Asumiendo que alpha_optim contiene el valor de alpha optimizado
+alpha_emv <- alpha_optim
+nu_emv <- 30  # Valor fijo de nu
+
+# 1. Crear una secuencia de valores sobre los que queremos calcular la densidad ajustada
+x_values <- seq(min(datosPerdida$Pérdida), max(datosPerdida$Pérdida), length.out = 100)
+
+# 2. Calcular la función de densidad para cada uno de esos valores
+densidad_ajustada <- mezclaFuncion(x_values, alpha_emv, nu_emv)
+
+# 3. Crear el histograma con frecuencias relativas
+hist(datosPerdida$Pérdida, breaks = 20, probability = TRUE, col = 'gray', border = 'white',
+     main = 'Histograma y Densidad Ajustada',
+     xlab = 'Pérdida', ylab = 'Densidad')
+
+# 4. Sobreponer la función de densidad ajustada
+lines(x_values, densidad_ajustada, col = 'blue', lwd = 2)
+
+# 5. Obtener las modas
+
+# Punto de inicio para la búsqueda de la moda, podría ser el valor medio de los datos, por ejemplo
+valor_inicial1 <- 60
+valor_inicial2 <- 25
+# Necesitamos una función que sea negativa para la función de densidad para poder minimizarla
+neg_densidad_mezcla <- function(x, alpha, nu) {
+  -mezclaFuncion(x, alpha, nu)
+}
+# Usar optim para encontrar la moda de la función de densidad
+resultado_moda <- optim(
+  par = valor_inicial1,
+  fn = neg_densidad_mezcla,
+  alpha = alpha_emv,
+  nu = nu_emv,
+  method = "L-BFGS-B",
+  lower = min(datosPerdida$Pérdida), # Límite inferior para la búsqueda
+  upper = max(datosPerdida$Pérdida)  # Límite superior para la búsqueda
+)
+
+# Usar optim para encontrar la moda de la función de densidad
+resultado_moda2 <- optim(
+  par = valor_inicial2,
+  fn = neg_densidad_mezcla,
+  alpha = alpha_emv,
+  nu = nu_emv,
+  method = "L-BFGS-B",
+  lower = min(datosPerdida$Pérdida), # Límite inferior para la búsqueda
+  upper = max(datosPerdida$Pérdida)  # Límite superior para la búsqueda
+)
+
+# La moda es el punto donde la función de densidad es máxima
+moda1 <- resultado_moda$par
+moda2 <- resultado_moda2$par
+
+```
+
+Con lo cual los valores de las modas son `r moda1` y `r moda2`.
+
 
 # Ejercicio 8
 
@@ -562,11 +619,198 @@ dólares) de 60 siniestros correspondientes a una póliza de incendio:
 
 **a)** Construya un histograma de frecuencias relativas con 6 clases de igual longitud entre $30,000$ y $90,000$ dólares. ¿Qué distribuciones paramétricas podrían ajustar a este perfil de siniestros? [10]
 
+```{r}
+library(readxl)
+library(kableExtra)
+ruta <- paste0(getwd(), "/bases/Tarea 3.xlsx")
+datosPerdida <- read_excel(ruta, sheet = "8", range = "L6:M66")
+
+hist(datosPerdida$Monto, 
+     breaks = seq(30, 90, length.out = 7), # Define los límites de las clases
+     freq = FALSE, # Usa frecuencias relativas en lugar de frecuencias absolutas
+     main = "Histograma de Frecuencias Relativas", 
+     xlab = "Monto de Pérdida ($)", 
+     ylab = "Densidad", 
+     col = "lightblue", 
+     border = "black")
+```
+
 **b)** Si se decide ajustar una Distribución Lognormal con parámetros $\mu \in \mathbb{R}$ y $\sigma^2 > 0$, calcule sus respectivos EMV. Grafique la función de distribución acumulada ajustada junto con la Ojiva. ¿Qué puede concluir? (Sugerencia: Recuerde que estos estimadores fueron deducidos en el Ejercicio E19). [10]
+
+Primero notemos que la función de verosimilitud es de la forma:
+
+$$
+L(\mu, \sigma \mid x_1, \ldots, x_n) = \prod_{i=1}^{n} \frac{1}{x_i \sigma \sqrt{2\pi}} \exp\left(-\frac{(\ln x_i - \mu)^2}{2\sigma^2}\right)
+$$
+
+y la log-verosimilitud es de la forma:
+
+$$
+\ln L(\mu, \sigma \mid \underline{X}_{n}) = -n\ln(\sigma) - \frac{n}{2}\ln(2\pi) - \sum_{i=1}^{n}\ln(x_i) - \frac{1}{2\sigma^2}\sum_{i=1}^{n}(\ln x_i - \mu)^2
+$$
+
+```{r}
+# Optimizamos numéricamente respecto a ambos parámetros
+
+lognormal <- function(x, mu, sigma) {
+  dlnorm(x, meanlog = mu, sdlog = sigma)
+}
+
+verosimilitud <- function(mu, sigma, datos) {
+  log_ver_ind <- log(lognormal(datos, mu, sigma)+.00000001)
+  resultado <- sum(log_ver_ind)
+  return(resultado)
+}
+
+neg_verosimilitud <- function(params, datos) {
+  mu <- params[1]
+  sigma <- params[2]
+  -verosimilitud(mu, sigma, datos)
+}
+
+# Suponiendo que tienes un dataframe llamado datosPerdida con una columna 'Pérdida'
+datos <- datosPerdida$Monto
+
+# Valores iniciales para alpha y nu
+valores_iniciales <- c(mu = log(40), sigma = 10)
+
+# Límites para alpha y nu
+# alpha está entre 0 y 1, y nu es mayor que 0
+limites <- list(c(.00001, 90), c(.00001, 90))
+
+# Utilizar optim con el método "L-BFGS-B" para encontrar los parámetros óptimos
+resultado_optim <- optim(
+  par = valores_iniciales,
+  fn = neg_verosimilitud,
+  datos = datos,
+  method = "L-BFGS-B",
+  lower = sapply(limites, `[`, 1), # Límites inferiores
+  upper = sapply(limites, `[`, 2)  # Límites superiores
+)
+
+# Los parámetros optimizados
+mu_optim <- resultado_optim$par[1]
+sigma_optim <- resultado_optim$par[2]
+
+```
+
+Con lo cual obtenemos que $\hat{\mu} = `r mu_optim`$ y $\hat{\sigma^{2}} = `r sigma_optim^2`$.
+
+
+Ahora procederemos a graficar la función de distribución acumulada ajustada junto con la Ojiva.
+
+```{r}
+mu_est <- mu_optim
+sigma_est <- sigma_optim
+
+# Define una secuencia de valores para los cuales se calculará la ojiva
+x_values <- seq(0,100, length.out = 1000)
+x_values2 <- seq(30,89, length.out = 1000)
+ecdf_datos <- ecdf(datosPerdida$Monto)
+# Función de la ojiva
+
+ojiva_lognormal <- function(x){
+  particion <- seq(30, 90, length.out = 7)
+  for (i in particion){
+    if(x <= i & x >= i-10){
+      cparticionBefore <- i-10
+      cparticionNow <- i
+      resultado <-  (cparticionNow - x)*ecdf_datos(cparticionBefore)/(cparticionNow- cparticionBefore) + (x - cparticionBefore)*ecdf_datos(cparticionNow)/(cparticionNow- cparticionBefore)
+      break
+    }
+  } 
+  return(resultado)
+}
+ojiva_empirica_values <- sapply(x_values2, ojiva_lognormal)
+
+lognormal <- function(x) {
+  plnorm(x, meanlog = mu_est, sdlog = sigma_est)
+}
+
+library(ggplot2)
+# Crear el gráfico con ggplot2
+ggplot() +
+  geom_line(aes(x= x_values, y = lognormal(x_values)), color = "blue") +
+  geom_line(aes(x=x_values2, y = ojiva_empirica_values), color = "red") +
+  labs(title = 'Log-normal CDF and Empirical CDF', x = 'Monto', y = 'CDF') +
+  theme_minimal() +
+  theme(legend.position = "bottomright")
+
+
+```
+
+Tenemos que tomar en cuenta que la ojiva es un estimador de la función de distribución acumulada similar al histograma. Y al paracer nuestra distribución ajustada sí está pareciéndose a la distribución de los datos. Solo cabe resaltar que subestima abtes de los 50,000 y sobreestima después de los 50,000.
 
 **c)** Construya la Gráfica de Probabilidad para el ajuste del inciso b). ¿Qué puede concluir? [10]
 
+```{r}
+# Carga la librería necesaria para funciones adicionales si es necesario
+# Por ejemplo, para la distribución t, necesitas la función qt de la librería stats
+library(stats)
+
+# Genera tus datos
+datos <- datosPerdida$Monto
+
+# Distribución empírica
+dist_empirica <- ecdf(datos)
+datos_empirica <- dist_empirica(datos)
+# Distribución teórica
+datos_teoricos <- lognormal(datos)
+
+data <- data.frame(datos_empirica, datos_teoricos)
+
+# Crea la gráfica de probabilidad
+ggplot(data,aes(x=datos_empirica , y= datos_teoricos)) +
+  geom_point() +
+  geom_abline(slope = 1, intercept = 0, color = "red") +
+  labs(title = "Gráfica de Probabilidad", x = "Distribución Teórica", y = "Distribución Empírica") +
+  theme_minimal()
+
+```
+
+Con esta gráfica es mucho más claro y preciso poder decir que la nuestra distribución ajustada se parece a la de los datos muestreados y por tanto no parecen haber grandes desviaciones. Fue un buen ajuste.
+
 **d)** Aplique la Prueba Kolmogorov-Smirnov para validar el ajuste Lognormal del inciso b). Considere un tamaño de error tipo I del 5%. [10]
 
+```{r}
+# Realizar la prueba de Kolmogorov-Smirnov
+ks_result <- ks.test(datosPerdida$Monto, "plnorm", meanlog = mu_est, sdlog = sigma_est)
+
+# Imprimir el resultado
+print(ks_result)
+```
+
+Con lo cual no se rechaza la hipótesis nula de que la distribución de los datos es lognormal, es decir, el ajuste fue bueno estadísticamente.
+
 **e)** Aplique la Prueba Ji-Cuadrada para validar el ajuste Lognormal del inciso b). Considere la partición del inciso a) y agregue 2 clases (inicial y final) para abarcar todo el soporte de la Lognormal. Calcule el valor-p para concluir. [10]
+
+```{r}
+mis_datos <- datosPerdida$Monto
+# Crear una secuencia de intervalos para la tabla de frecuencia
+breaks1 <- seq(30, 90, length.out = 7)  # Ajusta el número de intervalos según sea necesario
+breaks <- c(-Inf, breaks1, Inf)
+
+# Frecuencias observadas: conteo de datos en cada intervalo
+observed <- hist(mis_datos, breaks = breaks, plot = FALSE)$counts
+
+# probabilidades
+probabilities <- plnorm(breaks, meanlog = mu_est, sdlog = sigma_est)
+diff_prob <- diff(probabilities)
+
+# Realizar la prueba chi-cuadrada
+pruebachi <- chisq.test(x = observed, p = diff_prob, rescale.p = TRUE)
+kparam <- length(diff_prob) # Número de cajitas
+qparam <- 2 # parámetros de la distribución ajustada
+df_chi <- kparam - qparam - 1 # Grados de libertad
+pvalue <- pchisq(pruebachi$statistic, df = df_chi, lower.tail = FALSE)  # Valor-p
+```
+
+Por lo que el estadístico de prueba es `r pruebachi$statistic` y el valor-p es `r pvalue`. Es decir, no hay suficiente evidencia para rechazar la hipótesis nula de que la distribución de los datos es lognormal. Otra vez fue un buen ajuste.
+
+# Ejercicio 9
+
+Selección de modelos. A continuación se muestra el diagrama de tallo y hojas del monto
+de las reclamaciones de un seguro que cubre daños ocasionados por fenómenos
+hidrometeorológicos:
+
 
