@@ -16,20 +16,20 @@ editor_options:
 
 Para un seguro de daños, se conoce que las pérdidas menores a $c$ siguen una distribución $Exp(\frac{1}{\theta})$ con $\theta > 0$, y las pérdidas mayores o iguales a $c$ tienen una distribución $Pareto(\alpha, \beta)$ donde $\alpha > 0$ y $\beta >0$.
 
-a) Se pide demostrar que la función de densidad de la Distribución de Empalme está dada por:
+a)  Se pide demostrar que la función de densidad de la Distribución de Empalme está dada por:
 
 $f_X(x) = p \frac{\theta^{-1}e^{-\frac{x}{\theta}}}{1-e^{-\frac{c}{\theta}}} I(0 < x < c) + (1-p) \frac{\alpha (c+\beta)^{\alpha}}{(x+\beta)^{\alpha + 1}} I(x \geq c)$
 
 Dado:
 
-- $\theta = 100$
-- $\alpha = 4$
-- $\beta = 200$
-- $c = 100$
+-   $\theta = 100$
+-   $\alpha = 4$
+-   $\beta = 200$
+-   $c = 100$
 
 Se pide:
 
-i) Graficar $f_X(x)$ con $p = 0.6$. Determinar si $f_X(x)$ es continua en $x = 100$.
+i)  Graficar $f_X(x)$ con $p = 0.6$. Determinar si $f_X(x)$ es continua en $x = 100$.
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 # Instala e importa las librerías necesarias
@@ -88,7 +88,7 @@ ggplot() +
 
 ```
 
-ii) Encontrar el valor de $ p $ para que $ f_X(x) $ sea continua en $ x = 100 $ y luego graficar $ f_X(x) $ con este valor.
+ii) Encontrar el valor de \$ p \$ para que \$ f_X(x) \$ sea continua en \$ x = 100 \$ y luego graficar \$ f_X(x) \$ con este valor.
 
 ```{r}
 theta <- 100  
@@ -138,18 +138,15 @@ ggplot() +
 
 ```
 
-
-
 # Ejercicio 4: Colas de las distribuciones
 
-Suponga que $X \sim \text{Pareto}(\alpha, \theta)$ y  $Y \sim \text{Gamma}(\tau, \beta)$.
-
+Suponga que $X \sim \text{Pareto}(\alpha, \theta)$ y $Y \sim \text{Gamma}(\tau, \beta)$.
 
 ## Comparación de distribuciones
 
-b) Para comparar de manera más justa ambas distribuciones, queremos que ambas tengan media 5 y varianza 75.
+b)  Para comparar de manera más justa ambas distribuciones, queremos que ambas tengan media 5 y varianza 75.
 
-i) Encuentre los valores de $\alpha$, $\theta$, $\tau$, y $\beta$.
+c)  Encuentre los valores de $\alpha$, $\theta$, $\tau$, y $\beta$.
 
 ```{r}
 
@@ -176,11 +173,10 @@ beta <- varianza/esperanza
 
 Los valores de los parámetros son:
 
-- $\alpha = `r alpha`$
-- $\theta = `r theta`$
-- $\tau = `r tau`$
-- $\beta = `r beta`$
-
+-   $\alpha = `r alpha`$
+-   $\theta = `r theta`$
+-   $\tau = `r tau`$
+-   $\beta = `r beta`$
 
 ii) Compare en la misma gráfica ambas funciones de densidad. ¿Qué conclusiones se pueden derivar?
 
@@ -217,19 +213,17 @@ ggplot(df, aes(x)) +
 
 ```
 
-
 Se puede derivar que la gamma acumula más que la pareto para valores cercanos a cero (aún teniendo la misma varianza y media), por lo que la pareto tiene cola más pesada que la gamma.
 
 # Ejercicio 5
 
-Verosimilitud para datos agrupados. Suponga que las pérdidas de cierto riesgo siguen una distribución con función de distribución acumulada $F(x) = (1 - \frac{\theta}{x})I(\theta, \infty)(x)$, donde $\theta > 0$. Una muestra aleatoria de 20 siniestros contiene 9 pérdidas por debajo de 10 mil dólares, 6 pérdidas entre 10 y 25 mil dólares y 5 pérdidas que exceden los 25 mil dólares. Encuentre el estimador de máxima verosimilitud de $\theta$. [10]
+Verosimilitud para datos agrupados. Suponga que las pérdidas de cierto riesgo siguen una distribución con función de distribución acumulada $F(x) = (1 - \frac{\theta}{x})I(\theta, \infty)(x)$, donde $\theta > 0$. Una muestra aleatoria de 20 siniestros contiene 9 pérdidas por debajo de 10 mil dólares, 6 pérdidas entre 10 y 25 mil dólares y 5 pérdidas que exceden los 25 mil dólares. Encuentre el estimador de máxima verosimilitud de $\theta$. \[10\]
 
 Por principio de máxima verosimilitud tenemos que el logaritmo de la función de verosimilitud para datos agrupados está dada por:
 
 $$\ln(L(\theta)) = 9 \ln\left( F(10000, \theta) - F(0, \theta) \right) + 6 \ln\left( F(25000, \theta) - F(10000, \theta) \right)$$
 
 $$+5\ln\left( 1 - F(25000, \theta)\right)$$
-
 
 ```{r}
 
@@ -278,7 +272,7 @@ Ajuste para datos agrupados. A continuación se presenta la distribución de fre
 | Más de 16,000            | 1          |
 | **Total**                | **250**    |
 
-a) Construya el histograma de frecuencias relativas respectivo. Note que las clases son de distinta longitud. [10]
+a)  Construya el histograma de frecuencias relativas respectivo. Note que las clases son de distinta longitud. \[10\]
 
 ```{r}
 # Crea un vector con los límites de las clases
@@ -345,12 +339,7 @@ ggplot(df[1:6, ], aes(x = puntos_medios_clases, y = frecuencias_relativas_correg
 
 ```
 
-
-
-b) A partir de los datos agrupados, ajuste por máxima verosimilitud la Distribución Exponencial Inversa con función de distribución acumulada 
-$F(x) = e^{-\frac{\theta}{x}} I(0,\infty)(x), \quad \theta > 0$.
-Especifique $\hat{\theta}$ y grafique la densidad ajustada junto con el histograma del inciso anterior. [10]
-
+b)  A partir de los datos agrupados, ajuste por máxima verosimilitud la Distribución Exponencial Inversa con función de distribución acumulada $F(x) = e^{-\frac{\theta}{x}} I(0,\infty)(x), \quad \theta > 0$. Especifique $\hat{\theta}$ y grafique la densidad ajustada junto con el histograma del inciso anterior. \[10\]
 
 Por principio de máxima verosiimilitud tenemos que el logaritmo de la función de verosimilitud para datos agrupados está dada por:
 
@@ -443,8 +432,7 @@ El valor de $\theta$ que maximiza la verosimilitud numéricamente es `r resultad
 
 # Ejercicio 7
 
-Ajuste de una mezcla. Con base en 180 pérdidas de un seguro de vehículos que cubre
-automóviles y motocicletas se construyó el siguiente histograma:
+Ajuste de una mezcla. Con base en 180 pérdidas de un seguro de vehículos que cubre automóviles y motocicletas se construyó el siguiente histograma:
 
 ```{r}
 library(readxl)
@@ -457,7 +445,7 @@ hist(datosPerdida$Pérdida)
 
 Se quiere ajustar una mezcla de distribuciones Ji-Cuadradas con medias $\nu$ y $2\nu$ con ponderadores $\alpha$ y $1-\alpha$, respectivamente, donde $\nu \in \mathbb{Z^+}$ y $0 < \alpha < 1$.
 
-**a)** A partir de los datos individuales, escriba la función de densidad de la mezcla y verifique que los EMV son $\hat{\alpha} = 0.2468$ y $\hat{\nu} = 30$. (Sugerencia: Optimice numéricamente respecto a ambos parámetros, luego fije $\hat{\nu}$ al entero más cercano y maximice nuevamente para obtener $\hat{\alpha}$). [15]
+**a)** A partir de los datos individuales, escriba la función de densidad de la mezcla y verifique que los EMV son $\hat{\alpha} = 0.2468$ y $\hat{\nu} = 30$. (Sugerencia: Optimice numéricamente respecto a ambos parámetros, luego fije $\hat{\nu}$ al entero más cercano y maximice nuevamente para obtener $\hat{\alpha}$). \[15\]
 
 Primero notamos que la función de verosimilitud está dada por:
 
@@ -470,8 +458,6 @@ Por lo que el logaritmo de la función de verosimilitud está dado por:
 $$
 \ln(L(\nu, \alpha)) = \sum_{i=1}^{180} \left[ \ln\left( \alpha \frac{x^{\frac{\nu}{2}-1} e^{-\frac{x}{2}}}{2^{\frac{\nu}{2}} \Gamma\left(\frac{\nu}{2}\right)} + (1-\alpha)\frac{x^{\nu-1} e^{-\frac{x}{2}}}{2^{\nu} \Gamma(\nu)} \right) \right]
 $$
-
-
 
 ```{r, warning=FALSE}
 # Optimizamos numéricamente respecto a ambos parámetros
@@ -550,8 +536,7 @@ alpha_optim <- resultado_optim$par
 
 Con lo cual obtenemos que $\hat{\alpha} = `r alpha_optim`$ y $\hat{\nu} = `r 30`$.
 
-
-**b)** Grafique la función de densidad ajustada junto con el histograma de frecuencias relativas y obtenga los EMV de las modas. [15]
+**b)** Grafique la función de densidad ajustada junto con el histograma de frecuencias relativas y obtenga los EMV de las modas. \[15\]
 
 ```{r}
 # Asumiendo que alpha_optim contiene el valor de alpha optimizado
@@ -611,13 +596,11 @@ moda2 <- resultado_moda2$par
 
 Con lo cual los valores de las modas son `r moda1` y `r moda2`.
 
-
 # Ejercicio 8
 
-Pruebas de bondad de ajuste. A continuación se muestran los montos (en miles de
-dólares) de 60 siniestros correspondientes a una póliza de incendio:
+Pruebas de bondad de ajuste. A continuación se muestran los montos (en miles de dólares) de 60 siniestros correspondientes a una póliza de incendio:
 
-**a)** Construya un histograma de frecuencias relativas con 6 clases de igual longitud entre $30,000$ y $90,000$ dólares. ¿Qué distribuciones paramétricas podrían ajustar a este perfil de siniestros? [10]
+**a)** Construya un histograma de frecuencias relativas con 6 clases de igual longitud entre $30,000$ y $90,000$ dólares. ¿Qué distribuciones paramétricas podrían ajustar a este perfil de siniestros? \[10\]
 
 ```{r}
 library(readxl)
@@ -635,7 +618,7 @@ hist(datosPerdida$Monto,
      border = "black")
 ```
 
-**b)** Si se decide ajustar una Distribución Lognormal con parámetros $\mu \in \mathbb{R}$ y $\sigma^2 > 0$, calcule sus respectivos EMV. Grafique la función de distribución acumulada ajustada junto con la Ojiva. ¿Qué puede concluir? (Sugerencia: Recuerde que estos estimadores fueron deducidos en el Ejercicio E19). [10]
+**b)** Si se decide ajustar una Distribución Lognormal con parámetros $\mu \in \mathbb{R}$ y $\sigma^2 > 0$, calcule sus respectivos EMV. Grafique la función de distribución acumulada ajustada junto con la Ojiva. ¿Qué puede concluir? (Sugerencia: Recuerde que estos estimadores fueron deducidos en el Ejercicio E19). \[10\]
 
 Primero notemos que la función de verosimilitud es de la forma:
 
@@ -696,7 +679,6 @@ sigma_optim <- resultado_optim$par[2]
 
 Con lo cual obtenemos que $\hat{\mu} = `r mu_optim`$ y $\hat{\sigma^{2}} = `r sigma_optim^2`$.
 
-
 Ahora procederemos a graficar la función de distribución acumulada ajustada junto con la Ojiva.
 
 ```{r}
@@ -741,7 +723,7 @@ ggplot() +
 
 Tenemos que tomar en cuenta que la ojiva es un estimador de la función de distribución acumulada similar al histograma. Y al paracer nuestra distribución ajustada sí está pareciéndose a la distribución de los datos. Solo cabe resaltar que subestima abtes de los 50,000 y sobreestima después de los 50,000.
 
-**c)** Construya la Gráfica de Probabilidad para el ajuste del inciso b). ¿Qué puede concluir? [10]
+**c)** Construya la Gráfica de Probabilidad para el ajuste del inciso b). ¿Qué puede concluir? \[10\]
 
 ```{r}
 # Carga la librería necesaria para funciones adicionales si es necesario
@@ -770,7 +752,7 @@ ggplot(data,aes(x=datos_empirica , y= datos_teoricos)) +
 
 Con esta gráfica es mucho más claro y preciso poder decir que la nuestra distribución ajustada se parece a la de los datos muestreados y por tanto no parecen haber grandes desviaciones. Fue un buen ajuste.
 
-**d)** Aplique la Prueba Kolmogorov-Smirnov para validar el ajuste Lognormal del inciso b). Considere un tamaño de error tipo I del 5%. [10]
+**d)** Aplique la Prueba Kolmogorov-Smirnov para validar el ajuste Lognormal del inciso b). Considere un tamaño de error tipo I del 5%. \[10\]
 
 ```{r}
 # Realizar la prueba de Kolmogorov-Smirnov
@@ -782,7 +764,7 @@ print(ks_result)
 
 Con lo cual no se rechaza la hipótesis nula de que la distribución de los datos es lognormal, es decir, el ajuste fue bueno estadísticamente.
 
-**e)** Aplique la Prueba Ji-Cuadrada para validar el ajuste Lognormal del inciso b). Considere la partición del inciso a) y agregue 2 clases (inicial y final) para abarcar todo el soporte de la Lognormal. Calcule el valor-p para concluir. [10]
+**e)** Aplique la Prueba Ji-Cuadrada para validar el ajuste Lognormal del inciso b). Considere la partición del inciso a) y agregue 2 clases (inicial y final) para abarcar todo el soporte de la Lognormal. Calcule el valor-p para concluir. \[10\]
 
 ```{r}
 mis_datos <- datosPerdida$Monto
@@ -809,17 +791,15 @@ Por lo que el estadístico de prueba es `r pruebachi$statistic` y el valor-p es 
 
 # Ejercicio 9
 
-Selección de modelos. A continuación se muestra el diagrama de tallo y hojas del monto
-de las reclamaciones de un seguro que cubre daños ocasionados por fenómenos
-hidrometeorológicos:
+Selección de modelos. A continuación se muestra el diagrama de tallo y hojas del monto de las reclamaciones de un seguro que cubre daños ocasionados por fenómenos hidrometeorológicos:
 
 ```{r}
 datos <- read_excel(ruta, sheet = "9", range = "M7:N23")
 ```
 
-a) Suponga que se quiere ajustar una Distribución Gamma con media $\mu = \alpha\theta$.
+a)  Suponga que se quiere ajustar una Distribución Gamma con media $\mu = \alpha\theta$.
 
-i) Calcule los EMV de $\alpha$ y $\theta$. (Sugerencia: Recuerde que en el Ejercicio E14 se obtuvieron estos estimadores o utilice EViews para obtenerlos). [5]
+b)  Calcule los EMV de $\alpha$ y $\theta$. (Sugerencia: Recuerde que en el Ejercicio E14 se obtuvieron estos estimadores o utilice EViews para obtenerlos). \[5\]
 
 Recordemos que la log de la función de máxima verosimilitud está dada por:
 
@@ -831,7 +811,7 @@ $$\sum_{i=1}^{n}\ln (x_i)-n\frac{\Gamma'(\alpha)}{\Gamma(\alpha)}-n\ln(\theta)=0
 
 $$\frac{\sum_{i=1}^{n}x_i}{\theta^{2}}-n\frac{\alpha}{\theta}=0$$
 
-Con lo cual simplificando obtenemos que 
+Con lo cual simplificando obtenemos que
 
 $$\theta=\frac{\bar{x}}{\alpha}$$
 
@@ -860,7 +840,7 @@ theta_estimado <- mean(datos$Monto) / alpha_estimado
 
 Con lo cual los valores de $\hat{\alpha}$ y $\hat{\theta}$ son `r alpha_estimado` y `r theta_estimado` respectivamente.
 
-ii) Obtenga el Gráfico Cuantil-Cuantil para el ajuste de la distribución Gamma. ¿Qué puede concluir? (Sugerencia: Utilice EViews). [5]
+ii) Obtenga el Gráfico Cuantil-Cuantil para el ajuste de la distribución Gamma. ¿Qué puede concluir? (Sugerencia: Utilice EViews). \[5\]
 
 ```{r}
 library(ggplot2)
@@ -884,7 +864,7 @@ ggplot(datos, aes(x = theoretical, y = empirical)) +
 
 AJUSTAR QQPLOT(CHECAR)
 
-iii) Aplique la Prueba de Razón de Verosimilitudes con un nivel de significancia del 5% para determinar si el monto de las reclamaciones corresponde a una Gamma con media $\mu_0 = 2$. (Sugerencia: Note que a pesar de que la distribución Gamma tiene 2 parámetros, la prueba se debe hacer sólo con un parámetro pues $T(\mu) = (\alpha, \theta) = \alpha\theta$, con $T: \mathbb{R}^2 \rightarrow \mathbb{R}$. No olvide obtener el EMV restringido considerando el valor de $H_0$). [15]
+iii) Aplique la Prueba de Razón de Verosimilitudes con un nivel de significancia del 5% para determinar si el monto de las reclamaciones corresponde a una Gamma con media $\mu_0 = 2$. (Sugerencia: Note que a pesar de que la distribución Gamma tiene 2 parámetros, la prueba se debe hacer sólo con un parámetro pues $T(\mu) = (\alpha, \theta) = \alpha\theta$, con $T: \mathbb{R}^2 \rightarrow \mathbb{R}$. No olvide obtener el EMV restringido considerando el valor de $H_0$). \[15\]
 
 ```{r}
 logverosimilitud <- function(alpha, theta, x) {
@@ -930,7 +910,7 @@ valorptest <- 1 - pchisq(LR_test, df = 1)
 
 Con lo cual obtuvimos que el valor de la razón de verosimilitudes es `r LR_test` y el valor-p es `r valorptest`. Por lo que no se rechaza la hipótesis nula de que el monto de las reclamaciones corresponde a una Gamma con media $\mu_0 = 2$.
 
-b) Suponga que se quiere ajustar una distribución Weibull $(\gamma, \theta)$, $\gamma > 0$ y $\theta > 0$.
+b)  Suponga que se quiere ajustar una distribución Weibull $(\gamma, \theta)$, $\gamma > 0$ y $\theta > 0$.
 
 Primero notemos que la función de verosimilitud está dada por:
 
@@ -940,7 +920,7 @@ Con lo cual la log-verosimilitud está dada por:
 
 $$\ln L(\theta, \gamma)= n\ln(\gamma)-\gamma n\ln(\theta)+(\gamma-1)\sum_{i=1}^{n}\ln(x_{i})-\sum_{i=1}^{n}\left(\frac{x_{i}}{\theta}\right)^{\gamma}$$
 
-i) Obtenga los EMV de $\gamma$ y $\theta$. Calcule su log-verosimilitud y grafique la f.d.a. empírica y la f.d.a. ajustada. ¿Qué puede concluir? [10]
+i)  Obtenga los EMV de $\gamma$ y $\theta$. Calcule su log-verosimilitud y grafique la f.d.a. empírica y la f.d.a. ajustada. ¿Qué puede concluir? \[10\]
 
 ```{r}
 #Tambien se pudo usar de MASS  fitdistr(x, densfun, start, ...)
@@ -982,7 +962,7 @@ logver1 <- logveromisimilitud(datos$Monto, theta_estimado, gamma_estimado)
 
 ```
 
-Con lo cual los valores de $\hat{\theta}$ y $\hat{\gamma}$ son `r theta_estimado` y `r gamma_estimado` respectivamente. Además, el valor de la log-verosimilitud es `r logveromisimilitud(datos$Monto, theta_estimado, gamma_estimado)`. 
+Con lo cual los valores de $\hat{\theta}$ y $\hat{\gamma}$ son `r theta_estimado` y `r gamma_estimado` respectivamente. Además, el valor de la log-verosimilitud es `r logveromisimilitud(datos$Monto, theta_estimado, gamma_estimado)`.
 
 Ahora graficaremos la f.d.a. empírica y la f.d.a. ajustada.
 
@@ -1018,7 +998,7 @@ ggplot() +
 
 Al parecer fue un buen ajuste pues la f.d.a. ajustada se parece mucho a la f.d.a. empírica. Pero cabe señalar que la f.d.a. ajustada sobreestima poco antes de 1.5 y mayor a 2.3 aproximadamente, y subestima en los otros casos.
 
-ii) Para el ajuste del inciso anterior aplique las pruebas Kolmogorov-Smirnov y Anderson-Darling considerando un nivel de significancia del 5%. (Sugerencia: Utilice EViews). [5]
+ii) Para el ajuste del inciso anterior aplique las pruebas Kolmogorov-Smirnov y Anderson-Darling considerando un nivel de significancia del 5%. (Sugerencia: Utilice EViews). \[5\]
 
 ```{r}
 # Realizar la prueba de Kolmogorov-Smirnov
@@ -1042,7 +1022,7 @@ print(ad_result)
 
 En las dos pruebas no se rechaza la hipótesis nula de que la distribución de los datos es Weibull. Por lo que fue un buen ajuste.
 
-iii) Suponga que $\gamma = 3$ y que se aplica un deducible de 1.5 millones de dólares. Obtenga en este caso el EMV de $\theta$ y calcule su log-verosimilitud. [10]
+iii) Suponga que $\gamma = 3$ y que se aplica un deducible de 1.5 millones de dólares. Obtenga en este caso el EMV de $\theta$ y calcule su log-verosimilitud. \[10\]
 
 En este caso solo notemos que ahora la función de verosimilitud está dada por:
 
@@ -1095,8 +1075,7 @@ logver2 <- logveromisimilitud(datosDeducible$Monto, theta_estimado)
 
 Por lo tanto, el valor de $\hat{\theta}$ es `r theta_estimado` y el valor de la log-verosimilitud es `r logveromisimilitud(datosDeducible$Monto, theta_estimado)`.
 
-
-iv) Suponga que $\gamma = 3$ y que no se aplica deducible pero se establece un límite de aseguramiento de 2.5 millones de pesos. Obtenga en este caso el EMV de $\theta$ y calcule su log-verosimilitud. [10]
+iv) Suponga que $\gamma = 3$ y que no se aplica deducible pero se establece un límite de aseguramiento de 2.5 millones de pesos. Obtenga en este caso el EMV de $\theta$ y calcule su log-verosimilitud. \[10\]
 
 En este caso la función de verosimilitud está dada por:
 
@@ -1107,10 +1086,6 @@ donde $m_1$ es el número de datos menores al límite de aseguramiento y $m_2$ e
 Y por lo tanto la log-verosimilitud está dada por:
 
 $$\ln L(\theta)= m_1\ln(3)-3 m_1\ln(\theta)+2\sum_{i=1}^{m_1}\ln(x_{i})-\sum_{i=1}^{m_1}\left(\frac{x_{i}}{\theta}\right)^{3}-\sum_{i=1}^{m_2}\left(\frac{2.5}{\theta}\right)^{3}$$
-
-
-
-
 
 ```{r}
 
@@ -1155,7 +1130,7 @@ logver3 <- logveromisimilitud(datos$Monto, theta_estimado)
 
 Con lo cual el valor de $\hat{\theta}$ es `r theta_estimado` y el valor de la log-verosimilitud es `r logveromisimilitud(datos$Monto, theta_estimado)`.
 
-v) Calcule los Criterios de Información de Akaike, Schwartz y Hannan-Quinn para los modelos ajustados en los subincisos i), iii) y iv). ¿Cuál modelo se prefiere? Justifique brevemente su respuesta. [5]
+v)  Calcule los Criterios de Información de Akaike, Schwartz y Hannan-Quinn para los modelos ajustados en los subincisos i), iii) y iv). ¿Cuál modelo se prefiere? Justifique brevemente su respuesta. \[5\]
 
 ```{r}
 # Criterios
@@ -1177,24 +1152,19 @@ hannan_quinn_criterio <- function(logverosimilitud, k, n) {
 
 ```
 
-
-
-|                      | (i)                  | (ii)                 | (iii)                |
-|----------------------|----------------------|----------------------|----------------------|
-| n          | `r length(datos$Monto)`| `r length(datosDeducible$Monto)`| `r length(datos$Monto)`|
-| Log-verosimilitud    | `r logver1`         | `r logver2`        | `r logver3`       |
-| q                    | `r 2`              | `r 1`             | `r 1`            |
-| **Criterios de información** |                      |                      |                      |
-| Akaike | `r akaike_criterio(logver1,2,length(datos$Monto))` | `r akaike_criterio(logver2,1,length(datosDeducible$Monto))`| `r akaike_criterio(logver3,1,length(datos$Monto))`|
-| Schwartz             | `r schwartz_criterio(logver1,2,length(datos$Monto))`            | `r schwartz_criterio(logver2,1,length(datosDeducible$Monto))`           | `r schwartz_criterio(logver3,1,length(datos$Monto))`          |
-| Hannan-Quinn         | `r hannan_quinn_criterio(logver1,2,length(datos$Monto))`            | `r hannan_quinn_criterio(logver2,1,length(datosDeducible$Monto))`           | `r hannan_quinn_criterio(logver3,1,length(datos$Monto))`          |
-
+|                              | \(i\)                                                    | \(ii\)                                                            | \(iii\)                                                  |
+|------------------|------------------|------------------|------------------|
+| n                            | `r length(datos$Monto)`                                  | `r length(datosDeducible$Monto)`                                  | `r length(datos$Monto)`                                  |
+| Log-verosimilitud            | `r logver1`                                              | `r logver2`                                                       | `r logver3`                                              |
+| q                            | `r 2`                                                    | `r 1`                                                             | `r 1`                                                    |
+| **Criterios de información** |                                                          |                                                                   |                                                          |
+| Akaike                       | `r akaike_criterio(logver1,2,length(datos$Monto))`       | `r akaike_criterio(logver2,1,length(datosDeducible$Monto))`       | `r akaike_criterio(logver3,1,length(datos$Monto))`       |
+| Schwartz                     | `r schwartz_criterio(logver1,2,length(datos$Monto))`     | `r schwartz_criterio(logver2,1,length(datosDeducible$Monto))`     | `r schwartz_criterio(logver3,1,length(datos$Monto))`     |
+| Hannan-Quinn                 | `r hannan_quinn_criterio(logver1,2,length(datos$Monto))` | `r hannan_quinn_criterio(logver2,1,length(datosDeducible$Monto))` | `r hannan_quinn_criterio(logver3,1,length(datos$Monto))` |
 
 Notamos que el modelo que tiene menor valor en los 3 criterios de información es el modelo del inciso iii). Por lo que es el modelo que más se preferirá y el que mejor ajustó a los datos siguiendo cierta parsimonía con el número de parámetros que se estimaron. Es decir, el modelo con límite de aseguramiento (sin tomar en cuenta deducible) es mejor para poder ajustar los datos a una Weibull.
 
-# Ejercicio 11
-
-# Aproximación Binomial Negativa por Poisson
+# Ejercicio 11: Aproximación Binomial Negativa por Poisson
 
 Suponga que 
 $$
@@ -1203,7 +1173,7 @@ $$
 
 $$
 N_i \sim \text{iid Geo}(p), \quad 0 < p < 1;
-$$ 
+$$
 
 y que
 
@@ -1211,38 +1181,68 @@ $$
 N = N_1 + N_2 + \ldots + N_r, \quad r \in \mathbb{Z}^+.
 $$
 
-d) Para $N \sim \text{BN}(50, 0.2)$ se quieren obtener $P(N = 0)$ y $P(\left|N - E[N]\right| \leq \sigma)$.
+d)  Para $N \sim \text{BN}(50, 0.2)$ se quieren obtener $P(N = 0)$ y $P(\left|N - E[N]\right| \leq \sigma)$.
 
-i) Calcule exactamente ambas probabilidades. [5]
+    i\) Calcule exactamente ambas probabilidades. \[5\]
 
-$$
-P(N = 0)
-$$
+    $$P(N = 0)$$
 
-$$
-P(\left|N - E[N]\right| \leq \sigma)
-$$
-
-ii) Aproxime ambas probabilidades mediante la distribución Poisson. ¿Cuál es el error de la aproximación? [5]
-
-iii) Aproxime ambas probabilidades mediante el Teorema Central del Límite aplicando el Ajuste de Yate. ¿Cuál es el error de aproximación? ¿Qué puede concluir? [10]
-
+    $$P(\left|N - E[N]\right| \leq \sigma)$$
 
 ```{r}
+# Establecer los parámetros para la primera
+size <- 50    # Número deseado de éxitos
+prob <- .2    # Probabilidad de éxito en cada ensayo
+x <- 0         
+
+# Calcular la probabilidad
+probabilidad1 <- dnbinom(x, size, prob)
+
+#-----------------------------
+# Parámetros de la distribución binomial negativa
+size <- 50  # número de éxitos deseado
+prob <- 0.2 # probabilidad de éxito en cada ensayo
+
+# Calcular la media y la desviación estándar
+media <- size* (1 - prob) / prob
+varianza <- size * (1 - prob) / (prob^2)
+desviacion_std <- sqrt(varianza)
+
+# Calcular la probabilidad de que N esté dentro de una desviación estándar de la media
+limite_inferior <- pnbinom(p = (-desviacion_std+media), size = size, prob = prob)
+limite_superior <- pnbinom(p = (desviacion_std+media), size = size, prob = prob)
+
+probabilidad <- limite_superior - limite_inferior
+
+# Mostrar la probabilidad
+probabilidad
+
+
+
 
 ```
+
+    Notemos que las probabilidades son:
+
+    $$P(N = 0) = probabilidad1$$
+
+    $$P(\left|N - E[N]\right| \leq \sigma)= $$
+
+    ii\) Aproxime ambas probabilidades mediante la distribución Poisson. ¿Cuál es el error de la aproximación? \[5\]
+
+    iii\) Aproxime ambas probabilidades mediante el Teorema Central del Límite aplicando el Ajuste de Yate. ¿Cuál es el error de aproximación? ¿Qué puede concluir? \[10\]
+
 
 
 # Ejercicio 12 **Clase (a, b, 0) vs. Clase (a, b, 1).**
 
 Suponga que $N \sim \text{Bin}(m, q)$, con $m \in \mathbb{Z}^+$ y $0 < q < 1$.
 
-a) Demuestre que $N$ pertenece a la Clase $(a, b, 0)$ y especifique los valores de los parámetros $a$ y $b$, así como de $P(N = 0)$. [10]
+a)  Demuestre que $N$ pertenece a la Clase $(a, b, 0)$ y especifique los valores de los parámetros $a$ y $b$, así como de $P(N = 0)$. \[10\]
 
-b) Obtenga la función de masa de probabilidad de la distribución Binomial truncada en cero y verifique analíticamente que pertenece a la Clase $(a, b, 1)$. [10]
+b)  Obtenga la función de masa de probabilidad de la distribución Binomial truncada en cero y verifique analíticamente que pertenece a la Clase $(a, b, 1)$. \[10\]
 
-c) Si $m = 20$ y $q = 0.3$, grafique la función de masa de probabilidad de $N$ junto con la función de masa de probabilidad de su respectiva distribución Binomial modificada en cero considerando $P(N = 0) = 0.2$. Verifique numéricamente que la Binomial modificada en cero pertenece a la Clase $(a, b, 1)$. [10]
-
+c)  Si $m = 20$ y $q = 0.3$, grafique la función de masa de probabilidad de $N$ junto con la función de masa de probabilidad de su respectiva distribución Binomial modificada en cero considerando $P(N = 0) = 0.2$. Verifique numéricamente que la Binomial modificada en cero pertenece a la Clase $(a, b, 1)$. \[10\]
 
 ```{r}
 
