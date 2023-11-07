@@ -6,6 +6,7 @@ author: "Marcelino Sánchez"
 date: today
 format:
   html:
+    mathjax: true
     page-layout: full
     embed-resources: true
 editor_options: 
@@ -238,7 +239,9 @@ acumulada <- function(x, theta){
 
 
 verosimilitud <- function(theta){
-  resultado <- 9*log(acumulada(10000, theta)-acumulada(0,theta)) + 6*log(acumulada(25000, theta)-acumulada(10000,theta)) + 5*log(1-acumulada(25000,theta))
+  resultado <- 9*log(acumulada(10000, theta)-acumulada(0,theta)) +
+   6*log(acumulada(25000, theta)-acumulada(10000,theta)) + 
+   5*log(1-acumulada(25000,theta))
   return(resultado)
 }
 
@@ -246,8 +249,10 @@ neg_verosimilitud <- function(theta) {
   return(-verosimilitud(theta))
 }
 
-# Usamos la función optimize para encontrar el valor de theta que maximiza la verosimilitud
-# Establece un rango razonable para theta basado en tu conocimiento del problema
+# Usamos la función optimize para encontrar el 
+#valor de theta que maximiza la verosimilitud
+# Establece un rango razonable para 
+#theta basado en tu conocimiento del problema
 resultado <- optimize(neg_verosimilitud, interval=c(0, 9000))
 
 ```
@@ -310,7 +315,8 @@ puntos_medios_clases <- (clases[-1] + clases[-length(clases)])/2
 
 # Crea un data frame con los datos
 
-df <- data.frame( frecuencias, frecuencias_relativas, frecuencias_relativas_ajustadas, frecuencias_relativas_corregidas, puntos_medios_clases)
+df <- data.frame( frecuencias, frecuencias_relativas, frecuencias_relativas_ajustadas, 
+frecuencias_relativas_corregidas, puntos_medios_clases)
 
 
 # Grafica el histograma
@@ -345,7 +351,7 @@ Por principio de máxima verosiimilitud tenemos que el logaritmo de la función 
 
 $$\ln(L(\theta)) = \sum_{i=1}^{10} n_i \ln\left( F(b_i, \theta) - F(a_i, \theta) \right)$$
 
-```{r}
+```{r, warning=FALSE}
 acumulada <- function(x, theta){
   if(x > 0){
     resultado = exp(-theta/x)
@@ -359,9 +365,11 @@ acumulada <- function(x, theta){
 verosimilitud <- function(theta){
   for(i in 1:10){
     if(i == 1){
-      resultado <- frecuencias[i]*log(acumulada(clases[i+1], theta)-acumulada(clases[i],theta))
+      resultado <- frecuencias[i]*log(acumulada(clases[i+1], theta)-
+      acumulada(clases[i],theta))
     }else{
-      resultado <- resultado + frecuencias[i]*log(acumulada(clases[i+1], theta)-acumulada(clases[i],theta))
+      resultado <- resultado + 
+      frecuencias[i]*log(acumulada(clases[i+1], theta)-acumulada(clases[i],theta))
     }
   }
   return(resultado)
@@ -407,7 +415,8 @@ plot_base <- ggplot() +
 
 # Supongo que plot_base y los otros datasets ya están definidos
 
-# Calcula el factor de transformación. Este factor se basará en la relación entre los rangos máximos de tus datos.
+# Calcula el factor de transformación. Este factor se basará en la 
+#relación entre los rangos máximos de tus datos.
 max_y_data_to_plot2 <- max(data_to_plot2$y)
 max_df <- max(df$frecuencias_relativas_corregidas)
 
@@ -416,11 +425,14 @@ trans_factor <- max_y_data_to_plot2 / max_df
 
 final_plot <- plot_base +
   # Primero traza el histograma
-  geom_bar(data = df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas, width = longitudes_clases), stat = "identity", fill = "steelblue") +
+  geom_bar(data = df, aes(x = puntos_medios_clases, y = frecuencias_relativas_corregidas, 
+  width = longitudes_clases), stat = "identity", fill = "steelblue") +
   # Luego traza la línea, pero multiplica los valores por el factor de transformación
   geom_line(data = data_to_plot2, aes(x = x, y = y / trans_factor), color = "red") +
-  ggtitle(paste("Distribución Gama Inversa: alpha =", 1, ", beta =", resultado$minimum)) +
-  # Añade el eje secundario, dividiendo por el factor de transformación para mostrar los valores reales
+  ggtitle(paste("Distribución Gama Inversa: alpha =",
+   1, ", beta =", resultado$minimum)) +
+  # Añade el eje secundario, dividiendo por el 
+  #factor de transformación para mostrar los valores reales
   scale_y_continuous(sec.axis = sec_axis(~./trans_factor, name = "Eje secundario"))
 
 # Finalmente, muestra el gráfico
@@ -463,7 +475,8 @@ $$
 # Optimizamos numéricamente respecto a ambos parámetros
 
 mezclaFuncion <- function(x, alpha, nu) {
-  alpha * dgamma(x, shape = nu/2, scale = 2) + (1 - alpha) * dgamma(x, shape = nu, scale = 2)+.00000001
+  alpha * dgamma(x, shape = nu/2, scale = 2) + (1 - alpha) * dgamma(x, 
+  shape = nu, scale = 2)+.00000001
 }
 
 verosimilitud <- function(alpha, nu, datos) {
@@ -550,7 +563,8 @@ x_values <- seq(min(datosPerdida$Pérdida), max(datosPerdida$Pérdida), length.o
 densidad_ajustada <- mezclaFuncion(x_values, alpha_emv, nu_emv)
 
 # 3. Crear el histograma con frecuencias relativas
-hist(datosPerdida$Pérdida, breaks = 20, probability = TRUE, col = 'gray', border = 'white',
+hist(datosPerdida$Pérdida, breaks = 20, probability = TRUE, 
+col = 'gray', border = 'white',
      main = 'Histograma y Densidad Ajustada',
      xlab = 'Pérdida', ylab = 'Densidad')
 
@@ -559,10 +573,12 @@ lines(x_values, densidad_ajustada, col = 'blue', lwd = 2)
 
 # 5. Obtener las modas
 
-# Punto de inicio para la búsqueda de la moda, podría ser el valor medio de los datos, por ejemplo
+# Punto de inicio para la búsqueda de la moda, 
+#podría ser el valor medio de los datos, por ejemplo
 valor_inicial1 <- 60
 valor_inicial2 <- 25
-# Necesitamos una función que sea negativa para la función de densidad para poder minimizarla
+# Necesitamos una función que sea negativa para la 
+#función de densidad para poder minimizarla
 neg_densidad_mezcla <- function(x, alpha, nu) {
   -mezclaFuncion(x, alpha, nu)
 }
@@ -697,7 +713,11 @@ ojiva_lognormal <- function(x){
     if(x <= i & x >= i-10){
       cparticionBefore <- i-10
       cparticionNow <- i
-      resultado <-  (cparticionNow - x)*ecdf_datos(cparticionBefore)/(cparticionNow- cparticionBefore) + (x - cparticionBefore)*ecdf_datos(cparticionNow)/(cparticionNow- cparticionBefore)
+      resultado <-  (cparticionNow - 
+      x)*ecdf_datos(cparticionBefore)/(cparticionNow- 
+      cparticionBefore) + 
+      (x - cparticionBefore)*
+      ecdf_datos(cparticionNow)/(cparticionNow- cparticionBefore)
       break
     }
   } 
@@ -745,7 +765,8 @@ data <- data.frame(datos_empirica, datos_teoricos)
 ggplot(data,aes(x=datos_empirica , y= datos_teoricos)) +
   geom_point() +
   geom_abline(slope = 1, intercept = 0, color = "red") +
-  labs(title = "Gráfica de Probabilidad", x = "Distribución Teórica", y = "Distribución Empírica") +
+  labs(title = "Gráfica de Probabilidad", x = "Distribución Teórica",
+   y = "Distribución Empírica") +
   theme_minimal()
 
 ```
@@ -769,7 +790,8 @@ Con lo cual no se rechaza la hipótesis nula de que la distribución de los dato
 ```{r}
 mis_datos <- datosPerdida$Monto
 # Crear una secuencia de intervalos para la tabla de frecuencia
-breaks1 <- seq(30, 90, length.out = 7)  # Ajusta el número de intervalos según sea necesario
+breaks1 <- seq(30, 90, length.out = 7)  # Ajusta el 
+#número de intervalos según sea necesario
 breaks <- c(-Inf, breaks1, Inf)
 
 # Frecuencias observadas: conteo de datos en cada intervalo
@@ -846,37 +868,40 @@ ii) Obtenga el Gráfico Cuantil-Cuantil para el ajuste de la distribución Gamma
 library(ggplot2)
 
 # Ordena tus datos y calcula los cuantiles empíricos
-datos$empirical <- sort(datos$Monto)
+datos$empirical <- datos$Monto
 datos$theoretical <- qgamma(ppoints(length(datos$Monto)), shape = alpha_estimado, rate = theta_estimado)
 
-# Crea el gráfico Q-Q
-ggplot(datos, aes(x = theoretical, y = empirical)) +
-  geom_point() +
-  geom_abline(slope = 1, intercept = 0, color = "red", linetype = "dashed") +
-  labs(title = "Q-Q Plot for Gamma Distribution",
-       x = "Theoretical Quantiles",
-       y = "Sample Quantiles") +
+ggplot(data.frame(x = datos$theoretical, y = datos$empirical), aes(sample = y)) +
+  stat_qq(distribution = qgamma, dparams = list(shape = alpha_estimado, 
+  rate = theta_estimado)) +
+  stat_qq_line(distribution = qgamma, dparams = list(shape = alpha_estimado, 
+  rate = theta_estimado), color = "red") +
+  labs(title = "QQ-Plot para Distribución Gamma", 
+  x = "Cuantiles teóricos", y = "Cuantiles de los datos") +
+  coord_flip()+
   theme_minimal()
 
 
 
 ```
 
-AJUSTAR QQPLOT(CHECAR)
+Con lo cual podemos ver que la distribución Gamma es un buen ajuste para los datos.
 
 iii) Aplique la Prueba de Razón de Verosimilitudes con un nivel de significancia del 5% para determinar si el monto de las reclamaciones corresponde a una Gamma con media $\mu_0 = 2$. (Sugerencia: Note que a pesar de que la distribución Gamma tiene 2 parámetros, la prueba se debe hacer sólo con un parámetro pues $T(\mu) = (\alpha, \theta) = \alpha\theta$, con $T: \mathbb{R}^2 \rightarrow \mathbb{R}$. No olvide obtener el EMV restringido considerando el valor de $H_0$). \[15\]
 
 ```{r}
 logverosimilitud <- function(alpha, theta, x) {
   n <- length(x)
-  resultado <- (alpha - 1) * sum(log(x)) - sum(x / theta) - n * log(gamma(alpha)) - n * alpha * log(theta)
+  resultado <- (alpha - 1) * sum(log(x)) - sum(x / theta) - 
+  n * log(gamma(alpha)) - n * alpha * log(theta)
   return(resultado)
 }
 
 logverosimilitud_restringida <- function(alpha, x) {
   n <- length(x)
   theta <- 2 / alpha
-  resultado <- (alpha - 1) * sum(log(x)) - sum(x / theta) - n * log(gamma(alpha)) - n * alpha * log(theta)
+  resultado <- (alpha - 1) * sum(log(x)) - sum(x / theta) - 
+  n * log(gamma(alpha)) - n * alpha * log(theta)
   return(resultado)
 }
 
@@ -898,9 +923,11 @@ resultado_optim <- optim(
 alpha_restringido <- resultado_optim$par
 theta_restringido <- 2 / alpha_restringido
 
-logverosimilitud_restringida <- logverosimilitud(alpha_restringido, theta_restringido, datos$Monto)
+logverosimilitud_restringida <- logverosimilitud(alpha_restringido,
+ theta_restringido, datos$Monto)
 
-logverosimilitud_original <- logverosimilitud(alpha_estimado, theta_estimado, datos$Monto)
+logverosimilitud_original <- logverosimilitud(alpha_estimado, 
+theta_estimado, datos$Monto)
 
 LR_test <- 2 * (logverosimilitud_original -  logverosimilitud_restringida)
 
@@ -926,7 +953,8 @@ i)  Obtenga los EMV de $\gamma$ y $\theta$. Calcule su log-verosimilitud y grafi
 #Tambien se pudo usar de MASS  fitdistr(x, densfun, start, ...)
 logveromisimilitud <- function(x, theta, gamma) {
   n <- length(x)
-  resultado <- n * log(gamma) - gamma * n * log(theta) + (gamma - 1) * sum(log(x)) - sum((x / theta)^gamma)
+  resultado <- n * log(gamma) - gamma * n * log(theta) + 
+  (gamma - 1) * sum(log(x)) - sum((x / theta)^gamma)
   return(resultado)
 }
 
@@ -1002,7 +1030,8 @@ ii) Para el ajuste del inciso anterior aplique las pruebas Kolmogorov-Smirnov y 
 
 ```{r}
 # Realizar la prueba de Kolmogorov-Smirnov
-ks_result <- ks.test(datos$Monto, "pweibull", shape = gamma_estimado, scale = theta_estimado)
+ks_result <- ks.test(datos$Monto, "pweibull", 
+shape = gamma_estimado, scale = theta_estimado)
 
 print(ks_result)
 
@@ -1013,7 +1042,8 @@ pweibull_with_params <- function(q) {
   pweibull(q, shape = gamma_estimado, scale = theta_estimado)
 }
 
-# Realiza la prueba de Anderson-Darling usando tu vector de datos y la función de distribución definida
+# Realiza la prueba de Anderson-Darling usando tu 
+#vector de datos y la función de distribución definida
 ad_result <- ADGofTest::ad.test(datos$Monto, pweibull_with_params)
 
 # Ver los resultados de la prueba
@@ -1041,7 +1071,8 @@ datosDeducible <- datos[datos$Monto >= 1.5,]
 
 logveromisimilitud <- function(x, theta) {
   n <- length(x)
-  resultado <- n * log(3) - 3 * n * log(theta) + (3 - 1) * sum(log(x)) - sum((x / theta)^3)+n*(1.5/theta)^3
+  resultado <- n * log(3) - 3 * n * log(theta) + 
+  (3 - 1) * sum(log(x)) - sum((x / theta)^3)+n*(1.5/theta)^3
   return(resultado)
 }
 
@@ -1095,7 +1126,8 @@ logveromisimilitud <- function(x, theta) {
   xout <- x[x >= 2.5]
   m1 <- length(xind)
   m2 <- length(xout)
-  resultado <- m1 * log(3) - 3 * m1 * log(theta) + (3 - 1) * sum(log(xind)) - sum((xind / theta)^3)-m2*(2.5 / theta)^3
+  resultado <- m1 * log(3) - 3 * m1 * log(theta) + 
+  (3 - 1) * sum(log(xind)) - sum((xind / theta)^3)-m2*(2.5 / theta)^3
   return(resultado)
 }
 
@@ -1181,13 +1213,13 @@ $$
 N = N_1 + N_2 + \ldots + N_r, \quad r \in \mathbb{Z}^+.
 $$
 
-d)  Para $N \sim \text{BN}(50, 0.2)$ se quieren obtener $P(N = 0)$ y $P(\left|N - E[N]\right| \leq \sigma)$.
+d)  Para $N \sim \text{BN}(50, 0.2)$ se quieren obtener $P(N = 0)$ y $P(N - E[N] \leq \sigma)$.
 
     i\) Calcule exactamente ambas probabilidades. \[5\]
 
     $$P(N = 0)$$
 
-    $$P(\left|N - E[N]\right| \leq \sigma)$$
+    $$P(N - E[N] \leq \sigma)$$
 
 ```{r}
 # Establecer los parámetros para la primera
@@ -1209,30 +1241,96 @@ varianza <- size * (1 - prob) / (prob^2)
 desviacion_std <- sqrt(varianza)
 
 # Calcular la probabilidad de que N esté dentro de una desviación estándar de la media
-limite_inferior <- pnbinom(p = (-desviacion_std+media), size = size, prob = prob)
-limite_superior <- pnbinom(p = (desviacion_std+media), size = size, prob = prob)
+limite_superior <- pnbinom((desviacion_std+media), size = size, prob = prob)
 
-probabilidad <- limite_superior - limite_inferior
-
-# Mostrar la probabilidad
-probabilidad
-
-
-
-
+probabilidad2 <- limite_superior 
 ```
 
     Notemos que las probabilidades son:
 
-    $$P(N = 0) = probabilidad1$$
+  $$P(N = 0) = `r probabilidad1`$$
 
-    $$P(\left|N - E[N]\right| \leq \sigma)= $$
+  $$P(N - E[N] \leq \sigma)= `r probabilidad2`$$
 
-    ii\) Aproxime ambas probabilidades mediante la distribución Poisson. ¿Cuál es el error de la aproximación? \[5\]
+  ii\) Aproxime ambas probabilidades mediante la distribución Poisson. ¿Cuál es el error de la aproximación? \[5\]
 
-    iii\) Aproxime ambas probabilidades mediante el Teorema Central del Límite aplicando el Ajuste de Yate. ¿Cuál es el error de aproximación? ¿Qué puede concluir? \[10\]
+```{r}
+  # Calcular la probabilidad de que N esté dentro de una desviación estándar de la media
+lambda <-  size* (1 - prob) / prob
+media <-  lambda
+varianza <- lambda
+desviacion_std <- sqrt(varianza)
+
+limite_superior <- ppois((desviacion_std+media), lambda= lambda)
+
+probabilidad3 <- limite_superior 
+
+# calculamos proba de n=0
+
+probabilidad4 <- dpois(0, lambda)
+
+error1 <- abs(probabilidad4-probabilidad1)
+error2 <- abs(probabilidad3-probabilidad2)
+
+```
+
+Con lo cual obtenemos lo siguiente
+
+  $$P(N = 0) = `r probabilidad4`$$
+
+  $$P(N - E[N] \leq \sigma)= `r probabilidad3`$$
+
+Y el error de aproximación a cada son los siguientes:
+
+$$\text{error} (P(N = 0))=`r error1`$$
 
 
+$$\text{error}(P(N - E[N] \leq \sigma))=`r error2`$$
+
+  iii\) Aproxime ambas probabilidades mediante el Teorema Central del Límite aplicando el Ajuste de Yate. ¿Cuál es el error de aproximación? ¿Qué puede concluir? \[10\]
+
+  En este caso contruimos $N=\sum_{i=1}^{m} N_{i}$ donde $N_{i}\sim \textbf{Geo}(p)$ con lo cual por el TCL tenemos:
+
+  $$\frac{\sum_{i=1}^{m}N_{i}-m\frac{1-p}{p}}{\sqrt{m\frac{1-p}{p^{2}}}}\dot{\sim} N(0,1)$$
+
+  y ahora sí podemos aproximar con Normal y con el ajuste de Yate.
+
+```{r}
+media <- size* (1 - prob) / prob
+
+varianza <- size * (1 - prob) / (prob^2)
+
+desviacion_std <- sqrt(varianza)
+
+# Calcular la probabilidad de que N esté dentro de una desviación estándar de la media
+
+limite_superior <- pnorm((desviacion_std+media+.5), mean = media, sd = desviacion_std)
+
+probabilidad5 <- limite_superior
+
+# calculamos proba de n=0
+
+probabilidad6 <- pnorm(0+.5, mean = media, sd = desviacion_std)-
+pnorm(0-.5, mean = media, sd = desviacion_std)
+```
+
+Con lo cual obtenemos lo siguiente
+
+  $$P(N = 0)\approx P(N \leq 0 + .5) - P(N \leq 0 - .5)= `r probabilidad6`$$
+
+  $$P(N - E[N] \leq \sigma) \approx P(N \leq \sigma + E[N]+.5)$$ 
+  
+  $$=`r probabilidad5`$$
+
+donde $N\dot{\sim} N(E[N],Var(N))$
+
+  Y los errores de aproximación fueron los siguientes:
+
+  $$\text{error} (P(N = 0))=`r abs(probabilidad1-probabilidad6)`$$
+
+  $$\text{error}(P(N - E[N] \leq \sigma))=`r abs(probabilidad2-probabilidad5)`$$
+
+Con lo cual notamos que la aproximación con el TCL y el ajuste de Yate fue mucho mejor que la aproximación con la distribución Poisson, al calcular la probabilidad de que $|N-E[N]|\leq \sigma$, sin embargo, es peor al calcular la probabilidad de que $N=0$. Esto se debe a la naturaleza de las distribuciones involucradas, ya que cuando se refiera a calcular intervalos es mejor la aproximación de una distribución continua mientras que para calcular probabilidades puntuales es mejor la aproximación de una distribución discreta.
 
 # Ejercicio 12 **Clase (a, b, 0) vs. Clase (a, b, 1).**
 
@@ -1244,6 +1342,90 @@ b)  Obtenga la función de masa de probabilidad de la distribución Binomial tru
 
 c)  Si $m = 20$ y $q = 0.3$, grafique la función de masa de probabilidad de $N$ junto con la función de masa de probabilidad de su respectiva distribución Binomial modificada en cero considerando $P(N = 0) = 0.2$. Verifique numéricamente que la Binomial modificada en cero pertenece a la Clase $(a, b, 1)$. \[10\]
 
+Primero notemos que estas son las gráficas de las distribuciones binomiales originales y modificadas en cero.
+
+
 ```{r}
+```{r, warning=FALSE}
+library(ggplot2)
+
+# Parámetros de la distribución binomial
+n <- 20
+p <- 0.3
+
+# Probabilidad modificada en cero
+p0_mod <- 0.2
+
+# Vector de éxitos
+x <- 0:n
+
+# Función de probabilidad de masa de la distribución binomial original
+dbinom_original <- dbinom(x, size = n, prob = p)
+
+# Ajustar la distribución binomial modificada
+# Primero, calcula la probabilidad de 0 éxitos de la distribución binomial original
+p0_original <- dbinom_original[1]
+
+# Calcula el factor de ajuste
+adjust_factor <- (1-p0_mod) / (1 - p0_original)
+
+# Aplica el factor de ajuste a las probabilidades de 1 a n éxitos
+dbinom_modified <- dbinom_original
+dbinom_modified[-1] <- dbinom_original[-1] * (adjust_factor)
+
+# Asegúrate de que la suma de las probabilidades sea 1
+dbinom_modified[1] <- p0_mod
+
+# Crea un dataframe para graficar
+df <- data.frame(x, dbinom_original, dbinom_modified)
+
+# Graficar usando ggplot2
+ggplot(df, aes(x = x)) +
+  geom_point(aes(y = dbinom_original, colour = "Original"), size = 1.2) +
+  geom_point(aes(y = dbinom_modified, colour = "Modificada"), size = 1.2) +
+  labs(x = "Número de éxitos", y = "Probabilidad") +
+  scale_colour_manual(values = c("Original" = "blue", "Modificada" = "red")) +
+  ggtitle("Distribución Binomial y Modificada") +
+  theme_minimal()
 
 ```
+
+Ahora notemos que la binomial modificada pertenece a la clase $(a,b,1)$ pues si resolvemos el sistema de ecuaciones formado por la relación de recurrencia de las primeras probas tenemos:
+
+$$\frac{p_{2}}{p_{1}}=a+\frac{b}{2}$$
+
+$$\frac{p_{3}}{p_{2}}=a+\frac{b}{3}$$
+
+```{r}
+# Resolvemos el sistema de ecuaciones
+# Definir la matriz de coeficientes
+A <- matrix(c(1, .5, 1, 1/3), nrow = 2, byrow = TRUE)
+
+# Definir el vector de constantes
+B <- c(dbinom_modified[3]/dbinom_modified[2], dbinom_modified[4]/dbinom_modified[3])
+
+# Resolver para X
+X <- solve(A, B)
+a=X[1]
+b=X[2]
+```
+
+Con lo cual tenemos que $a=`r X[1]`$ y $b=`r X[2]`$. y
+
+Y solo verificamos que a partir de la relación de recurrencia obtengamos las probabilidades exactas de la distribución binomial modificada.
+
+```{r}
+# Definir la función de probabilidad de masa de la distribución binomial modificada
+
+binom_modified_num <- c(dbinom_modified[1], dbinom_modified[2],1:19)
+
+for (i in 1:19){
+  binom_modified_num[i+2] <- binom_modified_num[i+1]*(a+b/(i+1))
+}
+
+binom_modified_num-dbinom_modified
+```
+
+Y como podemos ver la diferencia entre la lista obtenida y la lista de las probabilidades de la binomial modificada es cero o muy cercana a cero numéricamente, por lo que la binomial modificada pertenece a la clase $(a,b,1)$.
+
+
