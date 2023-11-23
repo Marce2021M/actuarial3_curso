@@ -1,0 +1,121 @@
+---
+title: "Actuarial 3 Tarea 3"
+subtitle: "Actuarial 3"
+lang: es
+author: "Marcelino Sánchez"
+date: today
+format:
+  html:
+    mathjax: true
+    page-layout: full
+    embed-resources: true
+editor_options: 
+  chunk_output_type: console
+---
+
+# Ejercicio 1
+Distribuciones de frecuencia mixtas. Suponga que $N \sim \text{Bin}(m, q)$ es distribución de frecuencias con $m \in \mathbb{Z}^+$ y $0 < q < 1$. Para modelar la heterogeneidad de los riesgos contados por la variable aleatoria $N$ suponga que la distribución de mezcla del parámetro $q$ es $Q \sim \text{Beta}(\alpha, \beta)$, donde $\alpha > 0$ y $\beta > 0$.
+
+a) En este contexto a la distribución marginal de $N$ se le denomina Beta-Binomial. Obtenga su función de masa de probabilidad. [5]
+
+b) Calcule esperanza y varianza marginales de $N$. (Sugerencia: Utilice las fórmulas de Esperanza y Varianza Iteradas). [5]
+
+c) Si $m = 20$, $\alpha = 2$ y $\beta = 3$, grafique la función de masa de probabilidad de $N$. ¿Cuál sería su esperanza y varianza? [10]
+
+```{r}
+
+```
+
+
+# Ejercicio 2
+
+Distribución Neyman Tipo A. Si $S$ es distribución de frecuencias compuesta con distribución de frecuencias primaria $N_1 \sim \text{Po}(\lambda_1)$, con $\lambda_1 > 0$, y distribución de frecuencias secundaria $M_2 \sim \text{Po}(\lambda_2)$, con $\lambda_2 > 0$, entonces se dice que $S$ tiene una Distribución Neyman Tipo A.
+
+a) Calcule la función generadora de probabilidades de $S$. [5]
+
+b) Si $\{N_{\lambda}\} \sim \text{Po}(\Theta)$ con $\Theta = \lambda \theta$ y $\Theta$ es distribución de mezcla discreta con función generadora de momentos $M_{\Theta}(t)$:
+
+i) Demuestre que $P_N(t) = (1 - \lambda M_{\Theta}(t))^{\frac{-1}{\lambda}}$. ¿Por qué es válido considerar que $\Theta$ sea variable aleatoria discreta? [10]
+
+ii) Si $\Theta \sim \text{Po}(\mu)$, con $\mu > 0$, demuestre que la respectiva Distribución Poisson Mixta corresponde a una Distribución Neyman Tipo A, obtenga su función de masa de probabilidad y grafíquela para $\lambda = 0.5$ y $\mu = 10$. [15]
+
+
+# Ejercicio 3
+
+Ajuste de Distribuciones de Frecuencia. A continuación se muestra el número de reclamaciones que mensualmente ha recibido una Aseguradora en los últimos 5 años por la suscripción de un Seguro de Responsabilidad Civil de Directores y Funcionarios (Directors and Officers, también llamada D&O):
+
+a) Construya un diagrama de puntos para estos datos y una gráfica de barras apiladas para la distribución de frecuencias empíricas que permita distinguir las reclamaciones de cada año. ¿Qué distribuciones de frecuencia podrían ajustarse? [15]
+
+b) Si se quiere ajustar una distribución Binomial Negativa con parámetros $r > 1$ y $\beta > 0$ para esta distribución de frecuencias, ¿cuáles son los EMV (Estimadores de Máxima Verosimilitud) de $r$ y $\beta$? [10]
+
+c) Si se quiere ajustar una distribución Geométrica modificada en cero, ¿cuáles son los EMV de $p_M$ y $\beta$? [10]
+
+d) Considerando la Prueba Ji-Cuadrada con un nivel de significancia del 5%, ¿se pueden validar los modelos de los incisos b) y c)? Grafique los modelos ajustados. [10]
+
+e) Con base en los Criterios de Información para los modelos de los incisos b) y c), ¿qué distribución de frecuencias se prefiere? [5]
+
+
+# Ejercicio 4
+
+Distribuciones de severidad. Suponga que $W_1, W_2, \ldots$ son variables aleatorias independientes de severidad de siniestros.
+
+a) Si $W_i \sim U(0,1)$, para $i = 1, 2, 3$, y $Z = \frac{W_1 + W_2 + W_3}{3}$, calcule la función de densidad de $Z$. (Sugerencia: Utilice el resultado demostrado en el Ejercicio E52). [10]
+
+b) Para un seguro de construcción del sector de petróleo y gas natural se obtuvo la siguiente información: Suponga que para estos riesgos la distribución de severidad es $\text{Beta}(\theta, 5)$, con $\theta > 0$.
+   
+   i) Construya el diagrama de tallo y hojas de la severidad observada, estime el parámetro $\theta$ por máxima verosimilitud y grafique la densidad ajustada. [15].
+   
+   ii) Aplique la prueba Kolmogorov-Smirnov con $\alpha = 0.05$ para validar que el ajuste de la distribución $\text{Beta}(\hat{\theta}, 5)$. [10]
+   
+   iii) Si se presenta un nuevo siniestro al amparo de esta póliza en una obra en construcción con valor de 200 millones de dólares, ¿cuál es la esperanza y varianza del monto de la pérdida? [5]
+
+# Ejercicio 5
+
+Modelo de riesgo individual para vida. El modelo de riesgo individual se desarrolló originalmente para el seguro de vida. Suponga que la probabilidad de muerte dentro de un año es $q_j$ y que el seguro paga a la muerte de la j-ésima persona un beneficio fijo $b_j$. Si la distribución de pérdidas para la j-ésima póliza es 
+\[ X_j = \begin{cases} 
+0 & \text{si } x = 0 \\
+b_j & \text{si } x = q_j 
+\end{cases} \]
+la muerte de cada asegurado es independiente de las demás y $S = \sum_{j=1}^n X_j$ ...
+
+a) Demuestre que $E[S] = \sum_{j=1}^n b_j q_j$ y $\text{Var}[S] = \sum_{j=1}^n b_j^2 q_j (1-q_j)$. [5]
+
+b) El dueño de un negocio manufacturero contrata una póliza de vida grupal para sus 14 empleados con las siguientes características: Si la Aseguradora cobró la prima de riesgo (valor esperado de las pérdidas agregadas) más un margen de seguridad del 45%, ajuste una distribución $\text{Lognormal}(\mu, \sigma^2)$ para aproximar la probabilidad de que pierda dinero el próximo año. (Sugerencia: Iguale esperanza y varianza de la Lognormal con esperanza y varianza del modelo de riesgo individual). [10]
+
+# Ejercicio 7
+
+Distribución compuesta con pérdidas Exponenciales. Considere la distribución compuesta $S = \sum_{j=1}^N X_j$ con distribuciones de pérdida individuales $X_j \sim \text{Exp}(\theta)$ y distribución de frecuencias $P(N = n) = p_n$.
+
+a) Si $N \in \{0, 1, 2, \ldots\}$, demuestre que para $s > 0$, la función de distribución de $S$ es 
+\[ F_S(s) = e^{-\theta s} \sum_{j=0}^{\infty} \frac{(s\theta)^j}{j!} \]
+donde $p_j = \sum_{n=j}^{\infty} p_n$. Calcule $F_S(s)$ para $s > 0$ si $N \in \{0, 1, 2, \ldots, m\}$. (Sugerencia: Recuerde que la función gamma incompleta se define por $\Gamma(\alpha; x) = \int_0^x t^{\alpha - 1} e^{-t} dt$ para $\alpha > 0$ y $x > 0$; y que $\Gamma(\alpha; x) = \Gamma(\alpha) - \sum_{j=0}^{\infty} \frac{x^{\alpha - j}}{j!}$ para $\alpha \in \mathbb{Z}^+$). [10]
+
+b) Suponga que $N \sim \text{Bin}(m, q)$,
+   i) Calcule la función de distribución acumulada de $S$. [5]
+   ii) Si $m = 10$, $q = 0.2$ y $\theta = 5$, calcule $P\left(S > \sigma^2[E[S] + S]\right)$. [5]
+   iii) Obtenga la aproximación Normal de la probabilidad del inciso anterior. ¿Qué tan precisa es? ¿Es posible aplicar el ajuste de Yate? Justifique brevemente su respuesta. [5]
+
+# Ejercicio 9
+
+Método recursivo. Considere el modelo de riesgo colectivo con la siguiente distribución de pérdidas individuales expresada en múltiplos de 20 mil dólares:
+\[ f(x) = \begin{cases} 
+0.4 & \text{si } x = 1 \\
+0.3 & \text{si } x = 2 \\
+0.2 & \text{si } x = 3 \\
+0.1 & \text{si } x = 4 \\
+0   & \text{en otros casos}
+\end{cases} \]
+Utilice el método recursivo para responder las siguientes preguntas:
+
+a) Si la distribución de pérdidas agregadas es Poisson Compuesta con $\lambda = 3$, calcule la probabilidad de que el total de pérdidas sea mayor a 50 mil dólares. [5]
+
+b) Si la distribución de frecuencias es Binomial Negativa con $r = 6$ y $\beta = 0.5$, calcule e interprete al VaR 95% de la distribución de pérdidas agregadas. [15]
+
+
+# Ejercicio 11
+
+Modelo de ruina en tiempo discreto. El total de reclamaciones pagadas por una Aseguradora en un año (en millones de dólares) pueden ser 0, 5, 10, 15 o 20 con probabilidades 0.4, 0.3, 0.15, 0.1 y 0.05, respectivamente. La prima anual es de 6 millones de dólares y se recibe al inicio de cada año. La tasa de interés anual es de 10% aplicable a cualquier cantidad disponible al inicio del año y las reclamaciones se pagan al final del año.
+
+a) Si la Aseguradora cuenta con un capital inicial de 2 millones de dólares, ¿cuál es la probabilidad de que sobreviva al tercer año de operaciones? [10]
+
+b) ¿Cuál es el capital inicial mínimo que debe tener la Aseguradora para lograr que su probabilidad de ruina al tercer año sea menor o igual a 5%? [10]
