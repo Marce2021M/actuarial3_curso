@@ -13,6 +13,11 @@ editor_options:
   chunk_output_type: console
 ---
 
+```{r}
+library(VGAM)
+library(ggplot2)
+```
+
 # Ejercicio 1
 Distribuciones de frecuencia mixtas. Suponga que $N \sim \text{Bin}(m, q)$ es distribución de frecuencias con $m \in \mathbb{Z}^+$ y $0 < q < 1$. Para modelar la heterogeneidad de los riesgos contados por la variable aleatoria $N$ suponga que la distribución de mezcla del parámetro $q$ es $Q \sim \text{Beta}(\alpha, \beta)$, donde $\alpha > 0$ y $\beta > 0$.
 
@@ -23,7 +28,23 @@ b) Calcule esperanza y varianza marginales de $N$. (Sugerencia: Utilice las fór
 c) Si $m = 20$, $\alpha = 2$ y $\beta = 3$, grafique la función de masa de probabilidad de $N$. ¿Cuál sería su esperanza y varianza? [10]
 
 ```{r}
+library(ggplot2)
+m <- 20
+alpha <- 2
+beta <- 3
+xgraf <- 0:m
 
+# Assuming dbetabinom.ab is a valid function that returns beta-binomial probabilities
+ygraf <- dbetabinom.ab(xgraf, m, alpha, beta)
+data_frameAux <- data.frame(xgraf, ygraf)
+
+# Plotting with points
+ggplot(data_frameAux, aes(x = xgraf, y = ygraf)) +
+  geom_point(color = "blue", size = 3) +  # Points added here
+  theme_minimal() +
+  labs(title = "Beta-Binomial Distribution",
+       x = "x",
+       y = "Probability")
 ```
 
 
@@ -38,6 +59,12 @@ b) Si $\{N_{\lambda}\} \sim \text{Po}(\Theta)$ con $\Theta = \lambda \theta$ y $
 i) Demuestre que $P_N(t) = (1 - \lambda M_{\Theta}(t))^{\frac{-1}{\lambda}}$. ¿Por qué es válido considerar que $\Theta$ sea variable aleatoria discreta? [10]
 
 ii) Si $\Theta \sim \text{Po}(\mu)$, con $\mu > 0$, demuestre que la respectiva Distribución Poisson Mixta corresponde a una Distribución Neyman Tipo A, obtenga su función de masa de probabilidad y grafíquela para $\lambda = 0.5$ y $\mu = 10$. [15]
+
+```{r}
+lambda <- 0.5
+mu <- 10
+
+```
 
 
 # Ejercicio 3
