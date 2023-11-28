@@ -56,20 +56,52 @@ a) Calcule la función generadora de probabilidades de $S$. [5]
 
 b) Si $\{N_{\lambda}\} \sim \text{Po}(\Theta)$ con $\Theta = \lambda \theta$ y $\Theta$ es distribución de mezcla discreta con función generadora de momentos $M_{\Theta}(t)$:
 
-i) Demuestre que $P_N(t) = (1 - \lambda M_{\Theta}(t))^{\frac{-1}{\lambda}}$. ¿Por qué es válido considerar que $\Theta$ sea variable aleatoria discreta? [10]
+  i) Demuestre que $P_N(t) = (1 - \lambda M_{\Theta}(t))^{\frac{-1}{\lambda}}$. ¿Por qué es válido considerar que $\Theta$ sea variable aleatoria discreta? [10]
 
-ii) Si $\Theta \sim \text{Po}(\mu)$, con $\mu > 0$, demuestre que la respectiva Distribución Poisson Mixta corresponde a una Distribución Neyman Tipo A, obtenga su función de masa de probabilidad y grafíquela para $\lambda = 0.5$ y $\mu = 10$. [15]
+  ii) Si $\Theta \sim \text{Po}(\mu)$, con $\mu > 0$, demuestre que la respectiva Distribución Poisson Mixta corresponde a una Distribución Neyman Tipo A, obtenga su función de masa de probabilidad y grafíquela para $\lambda = 0.5$ y $\mu = 10$. [15]
 
 ```{r}
 lambda <- 0.5
 mu <- 10
 
+probNeyman <- function(x, lambda, mu) {
+resultado <- 0
+
+for (i in 0:1000) {
+  aux <- resultado
+  resultado <- resultado + (i^x / factorial(i)) * (mu*exp(-lambda))^i
+  if(abs(aux-resultado) < 0.000000001 & i > 1) {
+    break
+  }
+}
+
+resultado <- resultado*(lambda^x)*(exp(-mu))*(1/factorial(x))
+
+return(resultado)
+}
+
+# Create a dataset
+x_values <- 0:20  # Adjust the range of x as needed
+y_values <- sapply(x_values, probNeyman, lambda=lambda, mu=mu)
+data <- data.frame(x = x_values, y = y_values)
+
+# Plot
+ggplot(data, aes(x=x, y=y)) + 
+  geom_line() + 
+  geom_point() +
+  theme_minimal() +
+  labs(title = "Neyman Probability Distribution", x = "X", y = "Probability")
 ```
 
 
 # Ejercicio 3
 
 Ajuste de Distribuciones de Frecuencia. A continuación se muestra el número de reclamaciones que mensualmente ha recibido una Aseguradora en los últimos 5 años por la suscripción de un Seguro de Responsabilidad Civil de Directores y Funcionarios (Directors and Officers, también llamada D&O):
+
+```{r}
+# Cargamos data
+
+```
 
 a) Construya un diagrama de puntos para estos datos y una gráfica de barras apiladas para la distribución de frecuencias empíricas que permita distinguir las reclamaciones de cada año. ¿Qué distribuciones de frecuencia podrían ajustarse? [15]
 
