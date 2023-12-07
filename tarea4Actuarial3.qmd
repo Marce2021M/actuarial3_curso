@@ -14,9 +14,16 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 library(VGAM)
 library(ggplot2)
+library(kableExtra)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(gridExtra)
+
+library(actuar)
 ```
 
 # Ejercicio 1
@@ -99,20 +106,246 @@ ggplot(data, aes(x=x, y=y)) +
 
 Ajuste de Distribuciones de Frecuencia. A continuación se muestra el número de reclamaciones que mensualmente ha recibido una Aseguradora en los últimos 5 años por la suscripción de un Seguro de Responsabilidad Civil de Directores y Funcionarios (Directors and Officers, también llamada D&O):
 
-```{r}
+```{r, echo=FALSE}
 # Cargamos data
+# Crear un data.frame con los datos
+# Creamos el data.frame
+datos <- data.frame(
+  Mes = c("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"),
+  `2015` = c(0, 3, 1, 4, 3, 11, 4, 7, 3, 0, 0, 2),
+  `2016` = c(0, 3, 6, 0, 2, 5, 1, 0, 4, 0, 0, 1),
+  `2017` = c(0, 4, 3, 2, 2, 2, 7, 3, 0, 0, 2, 1),
+  `2018` = c(0, 1, 1, 1, 0, 1, 1, 0, 0, 4, 1, 1),
+  `2019` = c(2, 3, 0, 4, 0, 0, 2, 1, 0, 0, 8, 2)
+)
+# Mostrar tabla de datos
+kable(datos, format = "html", caption = "Número de reclamaciones mensuales por suscripción de un Seguro de Responsabilidad Civil de Directores y Funcionarios (D&O)") |> 
+kable_styling( full_width = F, position = "left")
 
 ```
 
 a) Construya un diagrama de puntos para estos datos y una gráfica de barras apiladas para la distribución de frecuencias empíricas que permita distinguir las reclamaciones de cada año. ¿Qué distribuciones de frecuencia podrían ajustarse? [15]
 
+```{r, warning=FALSE, message=FALSE}
+# Transformamos el dataframe a un formato largo
+datos_largos <- reshape2::melt(datos, id.vars = 'Mes')
+
+# Contamos la frecuencia de cada valor de reclamaciones
+frecuencias <- table(datos_largos$value)
+
+# Creamos los puntos (x, y)
+puntos <- lapply(names(frecuencias), function(x) {
+  y_vals <- seq_len(frecuencias[[x]])
+  data.frame(x = as.numeric(x), y = y_vals)
+})
+
+# Combinamos todos los data.frames en uno solo
+puntos_df <- do.call(rbind, puntos)
+
+# Graficamos
+
+g1 <- ggplot(puntos_df, aes(x = x, y = y)) +
+  geom_point(color = "blue", size = 3) +  # Points added here
+  theme_minimal() +
+  labs(title = "Distribución de Frecuencias", x = "Reclamaciones", y = "Frecuencia")
+
+# Graficamos diagrama de barras
+
+datosBarras <- datos_largos %>% 
+  group_by(value,variable) %>% 
+  summarise(n = n()) %>%
+  mutate(variable = factor(variable, levels = c("X2019", "X2018", "X2017", "X2016", "X2015")))
+
+g2 <- ggplot(datosBarras, aes(x = value, y =n, fill = variable)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Distribución de Frecuencias", x = "Reclamaciones", y = "Frecuencias")
+
+grid.arrange(g1, g2, nrow = 1)
+```
+
+En algunas años parece que hay ciertos huecos en donde no hubo cierto número de reclamaciones pero en general se ve que es descreciente el número de reclamaciones. Podría ajustarse una distribución Poisson con $\lambda<1$, Binomial Negativa o Geométrica.
+
+
 b) Si se quiere ajustar una distribución Binomial Negativa con parámetros $r > 1$ y $\beta > 0$ para esta distribución de frecuencias, ¿cuáles son los EMV (Estimadores de Máxima Verosimilitud) de $r$ y $\beta$? [10]
+
+Para esto notemos que la función de verosimilitud es de la siguiente forma:
+
+$$L(r,\beta)= \prod_{i=1}^{n} \left(\frac{\Gamma(x_{i}+r)}{\Gamma(x_{i}+1)\Gamma(r)}\right)\left(\frac{1}{1+\beta}\right)^{nr}\left(\frac{\beta}{1+\beta}\right)^{\sum_{i=1}^{n}x_{i}}$$
+
+Con lo cual tenemos la log-verosimilitud:
+
+$$\ln L(r,\beta)= \sum_{i=1}^{n} \ln\left(\frac{\Gamma(x_{i}+r)}{\Gamma(x_{i}+1)\Gamma(r)}\right)+nr\ln\left(\frac{1}{1+\beta}\right)+\sum_{i=1}^{n}x_{i}\ln\left(\frac{\beta}{1+\beta}\right)$$
+
+Derivando respecto a $r$ y $\beta$ obtenemos las condiciones de primer orden:
+
+$$\frac{\partial \ln L(r,\beta)}{\partial r}=\sum_{i=1}^{n} \left(\psi(x_{i}+r)-\psi(r)\right)+n\ln\left(\frac{1}{1+\beta}\right)=0$$
+
+$$\frac{\partial \ln L(r,\beta)}{\partial \beta}=-nr\frac{1}{1+\beta}+\sum_{i=1}^{n}\left(x_{i}\frac{1}{\beta}-\frac{x_{i}}{1+\beta}\right)=0$$
+
+donde $\psi(x)$ es la función digamma.
+
+Con lo cual simplificando obtenemos lo siguiente:
+
+$$\sum_{i=1}^{n} \psi(x_{i}+r)-n\psi(r)-n\ln\left(1+\beta\right)=0$$
+
+$$\beta = \frac{\bar{x}}{r}$$
+
+Por lo tanto para encontrar los estimadores de máxima verosimilitud debemos satisfacer la siguiente ecuación:
+
+$$\sum_{i=1}^{n} \psi(x_{i}+r)-n\psi(r)-n\ln\left(1+\frac{\bar{x}}{r}\right)=0$$
+
+Procedemos a resolverla numéricamente.
+
+```{r}
+funObj <- function(x) {
+  sum(digamma(datos_largos$value + x)) - nrow(datos_largos)*digamma(x) - nrow(datos_largos)*log(1 + mean(datos_largos$value)/x)
+}
+
+# Resolvemos la ecuación
+
+rRoot <- uniroot(funObj, c(1, 100))$root
+beta <- mean(datos_largos$value)/rRoot
+```
+
+Por lo tanto los estimadores de máxima verosimilitud son $r = `r rRoot`$ y $\beta = `r beta`$.
 
 c) Si se quiere ajustar una distribución Geométrica modificada en cero, ¿cuáles son los EMV de $p_M$ y $\beta$? [10]
 
+Para esto notemos que la función de verosimilitud es de la siguiente forma:
+
+$$L(p_{M},\beta)= \prod_{i=1}^{n} \left(\frac{p_{M}^{x_{i}}}{1-p_{M}^{1+\beta}}\right)$$
+
+
 d) Considerando la Prueba Ji-Cuadrada con un nivel de significancia del 5%, ¿se pueden validar los modelos de los incisos b) y c)? Grafique los modelos ajustados. [10]
 
+```{r}
+# Calculamos las frecuencias esperadas
+qParam <- 2
+kParam <- max(datos_largos$value)
+gradosLibertad <- kParam - qParam
+pMod <- 1/3
+beta2 <- 79/40
+nTotal <- nrow(datos_largos)
+
+datosFreq <- datos_largos %>% 
+  group_by(value) %>%
+  summarise(n = n())
+
+probModFunc <- function(x, pMod, beta) {
+if(x < kParam) {
+ resultado <- actuar::dzmgeom(x,1/(1+beta), pMod)
+} else {
+  resultado <- 1-sum(sapply(0:(kParam-1), actuar::dzmgeom, prob = 1/(1+beta), p0 = pMod))
+}
+return(resultado)
+}
+
+probBinNeg <- function(x, r, beta) {
+ if(x < kParam) {
+   resultado <- dnbinom(x, r, 1/(1+beta))
+ } else {
+   resultado <- 1-sum(sapply(0:(kParam-1), dnbinom, size = r, prob = 1/(1+beta)))
+ }
+ return(resultado)
+}
+
+
+# Calculamos las frecuencias esperadas
+frecuenciasEsperadas1 <- sapply(0:kParam, probBinNeg, r = rRoot, beta = beta)*nTotal
+
+frecuenciasEsperadas2 <- sapply(0:kParam, probModFunc, pMod = pMod, beta = beta2)*nTotal
+
+calcFrec <- function(x) {
+  if(x %in% datosFreq$value) {
+    resultado <-  pull(datosFreq[datosFreq$value == x, "n"])
+  } else {
+    resultado <- 0
+  }
+  return(resultado)
+}
+
+frecuenciasObservadas <- sapply(0:kParam, calcFrec)
+
+# Calculamos el estadístico de prueba
+
+estadisticoPrueba1 <- sum((frecuenciasObservadas - frecuenciasEsperadas1)^2/frecuenciasEsperadas1)
+
+estadisticoPrueba2 <- sum((frecuenciasObservadas - frecuenciasEsperadas2)^2/frecuenciasEsperadas2)
+
+
+
+# Calculamos el p-value
+
+pValue1 <- 1 - pchisq(estadisticoPrueba1, gradosLibertad)
+
+pValue2 <- 1 - pchisq(estadisticoPrueba2, gradosLibertad)
+
+# Graficamos
+table <- data.frame(
+  x = 0:kParam,
+  frecuenciasObservadas = frecuenciasObservadas
+)
+
+tableComp <- table %>%
+  mutate(binom_neg = dnbinom(0:kParam, rRoot, 1/(1+beta)),
+         dzmgeom = dzmgeom(0:kParam, 1/(1+beta2), pMod),
+         prop = frecuenciasObservadas/nTotal)  
+
+ggplot(tableComp, aes(x = x)) +
+  geom_col(aes(y = prop, fill = "Observado"), alpha = 0.5) +
+  geom_line(aes(y = binom_neg, color = "Binomial Negativa")) +
+  geom_line(aes(y = dzmgeom, color = "Geométrica Modificada")) +
+  scale_fill_manual(values = c("blue")) +
+  scale_color_manual(values = c("red", "green")) +
+  theme()
+```
+
+
+
 e) Con base en los Criterios de Información para los modelos de los incisos b) y c), ¿qué distribución de frecuencias se prefiere? [5]
+
+```{r}
+# Calculamos los criterios de información
+
+# Criterios
+akaike_criterio <- function(logverosimilitud, k, n) {
+  resultado <- (-2 * logverosimilitud + 2 * k)/n
+  return(resultado)
+}
+
+schwartz_criterio <- function(logverosimilitud, k, n) {
+  resultado <- (-2 * logverosimilitud + 2 * log(n))/n
+  return(resultado)
+}
+
+hannan_quinn_criterio <- function(logverosimilitud, k, n) {
+  resultado <- (-2 * logverosimilitud + 2 * k * log(log(n)))/n
+  return(resultado)
+}
+
+# Binomial Negativa
+logLikBinNeg <- function(r, beta) {
+  sum(dnbinom(datos_largos$value, r, 1/(1+beta), log = TRUE))
+}
+
+logVer1 <- logLikBinNeg(rRoot, beta)
+
+# Geométrica Modificada
+
+logLikGeomMod <- function(pMod, beta) {
+  sum(dzmgeom(datos_largos$value, prob=1/(1+beta), pMod, log = TRUE))
+}
+logVer2 <- logLikGeomMod(pMod, beta2)
+```
+
+| **Criterios de información** |Binomial  Negativa|Geométrica modificada en cero|
+|--------|--------|--------|
+| Akaike                       | `r akaike_criterio(logVer1,qParam,nTotal)`       | `r akaike_criterio(logVer2,qParam,nTotal)`       |     
+| Schwartz                     | `r schwartz_criterio(logVer1,qParam,nTotal)`     | `r schwartz_criterio(logVer2,qParam,nTotal)`     |   
+| Hannan-Quinn                 | `r hannan_quinn_criterio(logVer1,qParam,nTotal)` | `r hannan_quinn_criterio(logVer2,qParam,nTotal)` |
+|--------|--------|--------|
+| **Verosimilitud** | `r logVer1`| `r logVer2` |
 
 
 # Ejercicio 4
@@ -122,20 +355,108 @@ Distribuciones de severidad. Suponga que $W_1, W_2, \ldots$ son variables aleato
 a) Si $W_i \sim U(0,1)$, para $i = 1, 2, 3$, y $Z = \frac{W_1 + W_2 + W_3}{3}$, calcule la función de densidad de $Z$. (Sugerencia: Utilice el resultado demostrado en el Ejercicio E52). [10]
 
 b) Para un seguro de construcción del sector de petróleo y gas natural se obtuvo la siguiente información: Suponga que para estos riesgos la distribución de severidad es $\text{Beta}(\theta, 5)$, con $\theta > 0$.
+
+```{r}
+# Crear los datos
+datos <- data.frame(
+  Pais = c("Arabia Saudita", "Brasil", "Colombia", "Emiratos Árabes", 
+           "Estados Unidos", "Estados Unidos", "México", "Nigeria"),
+  Descripcion = c("Explosión de caldera en pruebas de arranque", 
+                  "Daño a planta catalítica por inundación", 
+                  "Daño a planta petroquímica por derrumbe", 
+                  "Derrumbe en torre de destilación por error de diseño", 
+                  "Colapso en ducto por volcadura de grúa", 
+                  "Daño a plataforma en construcción por huracán", 
+                  "Fisura en ducto submarino por sobreesfuerzo en la colocación", 
+                  "Daños a plataforma en construcción por robo y vandalismo"),
+  Valor = c(50, 300, 125, 50, 30, 300, 25, 180),
+  Perdida = c(16.4, 86.6, 18.1, 29.8, 4.8, 28.9, 8.9, 32)
+)
+
+```
    
    i) Construya el diagrama de tallo y hojas de la severidad observada, estime el parámetro $\theta$ por máxima verosimilitud y grafique la densidad ajustada. [15].
+
+```{r}
+# Diagrama de tallo y hojas
+datosSeveridad <- datos %>% 
+  mutate(severidad = Perdida/Valor)
+
+# Diagrama de tallo y hojas
+
+stem(datosSeveridad$severidad, scale = 1)
+```
+
+Para estimar el parámetro $\theta$ por máxima verosimilitud debemos maximizar la siguiente función de verosimilitud:
+
+$$L(\theta)=\prod_{i=1}^{n} \frac{\Gamma(5+\theta)}{\Gamma(\theta)\Gamma(5)}x_{i}^{\theta-1}(1-x_{i})^{5-1}$$
+
+Con lo cual obtenemos la siguiente log-verosimilitud:
+
+$$\ln L(\theta)=n\ln\left(\frac{\Gamma(5+\theta)}{\Gamma(\theta)\Gamma(5)}\right)+(\theta-1)\sum_{i=1}^{n}\ln(x_{i})+4\sum_{i=1}^{n}\ln(1-x_{i})$$
+
+Derivando respecto a $\theta$ obtenemos la siguiente condición de primer orden:
+
+$$\frac{\partial \ln L(\theta)}{\partial \theta}=\left(\psi(5+\theta)-\psi(\theta)\right)+\frac{1}{n}\sum_{i=1}^{n}\ln(x_{i})=0$$
+
+donde $\psi(x)$ es la función digamma.
+
+Y procedemos a calcular el punto crítico numéricamente.
+
+```{r}
+# Estimación por máxima verosimilitud
+
+funcObj <- function(x) {
+  digamma(5+x) - digamma(x) + mean(log(datosSeveridad$severidad))
+}
+
+theta <- uniroot(funcObj, c(.001, 100))$root
+
+# Graficamos la densidad ajustada
+
+x <- seq(0, 1, 0.01)
+y <- dbeta(x, theta, 5)
+
+data_frameAux <- data.frame(x, y)
+
+# Plotting with points
+
+ggplot(data_frameAux, aes(x = x, y = y)) +
+  geom_line(color = "blue", size = 3) +  # Points added here
+  theme_minimal() +
+  labs(title = "Densidad ajustada", x = "x", y = "Densidad")
+
+```
+
+Por lo tanto el estimador de máxima verosimilitud es $\hat{\theta} = `r theta`$.
    
    ii) Aplique la prueba Kolmogorov-Smirnov con $\alpha = 0.05$ para validar que el ajuste de la distribución $\text{Beta}(\hat{\theta}, 5)$. [10]
+
+```{r}
+# Prueba Kolmogorov-Smirnov
+
+ks.test(datosSeveridad$severidad, "pbeta", theta, 5)
+
+```
+
+   iii) Si la Aseguradora cobra una prima de riesgo de 20% sobre el valor esperado de las pérdidas, ¿cuál es la probabilidad de que pierda dinero en un año? [5]
+
+```{r}
+# Probabilidad de que pierda dinero en un año
+
+```
    
    iii) Si se presenta un nuevo siniestro al amparo de esta póliza en una obra en construcción con valor de 200 millones de dólares, ¿cuál es la esperanza y varianza del monto de la pérdida? [5]
 
 # Ejercicio 5
 
 Modelo de riesgo individual para vida. El modelo de riesgo individual se desarrolló originalmente para el seguro de vida. Suponga que la probabilidad de muerte dentro de un año es $q_j$ y que el seguro paga a la muerte de la j-ésima persona un beneficio fijo $b_j$. Si la distribución de pérdidas para la j-ésima póliza es 
-\[ X_j = \begin{cases} 
+
+$$X_j = \begin{cases} 
 0 & \text{si } x = 0 \\
 b_j & \text{si } x = q_j 
-\end{cases} \]
+\end{cases}$$
+
 la muerte de cada asegurado es independiente de las demás y $S = \sum_{j=1}^n X_j$ ...
 
 a) Demuestre que $E[S] = \sum_{j=1}^n b_j q_j$ y $\text{Var}[S] = \sum_{j=1}^n b_j^2 q_j (1-q_j)$. [5]
