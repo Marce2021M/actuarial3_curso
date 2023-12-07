@@ -553,4 +553,58 @@ Modelo de ruina en tiempo discreto. El total de reclamaciones pagadas por una As
 
 a) Si la Aseguradora cuenta con un capital inicial de 2 millones de dólares, ¿cuál es la probabilidad de que sobreviva al tercer año de operaciones? [10]
 
+```{r}
+i=0.1
+prima <- 6
+uExcedFunc  <- function(uAnterior, posibHipo) {
+  if(uAnterior < 0) {
+    resultado <- -.001
+  }else {
+    resultado <- (uAnterior + prima)*(1+i) - posibHipo + .0
+  }
+  return(resultado)
+}
+
+creaVectorExcedentes <- function(instanciaVectorProgreso) {
+  posibHipo <- c(0, 5, 10, 15, 20)
+  resultado <- sapply(posibHipo, uExcedFunc, uAnterior = instanciaVectorProgreso)
+  return(resultado)
+}
+
+creaVectorProb <- function(instanciaProb) {
+    probTrans <- c(0.4, 0.3, 0.15, 0.1, 0.05)
+    resultado <- sapply(probTrans, function(x) x*instanciaProb)
+  return(resultado)
+}
+
+procesoExc <- function(uInicial, tiempo) {
+  vectorProgreso <- c(uInicial)
+  vectorProb <- c(1.00)
+  for (i in 1:tiempo) {
+    vectorProgreso <- sapply(vectorProgreso, creaVectorExcedentes)
+    vectorProgreso <- c(vectorProgreso)
+    vectorProb <- sapply(vectorProb, creaVectorProb)
+    vectorProb <- c(vectorProb)
+  }
+  dfResults <- data.frame(proceso = vectorProgreso,prob= vectorProb)
+  return(dfResults)
+}      
+
+df <- procesoExc(2,3)
+df <- df %>% 
+  mutate(probSinRuina = ifelse(proceso>=0,1,0)*prob)
+
+probabilidad <- (sum(df$probSinRuina))
+
+probFuncRuina <- function(uInicial) {
+df <- procesoExc(uInicial,3)
+df <- df %>% 
+  mutate(probSinRuina = ifelse(proceso>=0,1,0)*prob)
+probabilidad <- (sum(df$probSinRuina))
+return(1-probabilidad)
+}
+
+
+```
+
 b) ¿Cuál es el capital inicial mínimo que debe tener la Aseguradora para lograr que su probabilidad de ruina al tercer año sea menor o igual a 5%? [10]
