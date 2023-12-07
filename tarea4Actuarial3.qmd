@@ -273,7 +273,7 @@ estadisticoPrueba1 <- sum((frecuenciasObservadas - frecuenciasEsperadas1)^2/frec
 
 estadisticoPrueba2 <- sum((frecuenciasObservadas - frecuenciasEsperadas2)^2/frecuenciasEsperadas2)
 
-
+chisq.test(frecuenciasObservadas, p = frecuenciasEsperadas1/nTotal, rescale.p = TRUE)
 
 # Calculamos el p-value
 
@@ -370,7 +370,7 @@ datos <- data.frame(
                   "Fisura en ducto submarino por sobreesfuerzo en la colocación", 
                   "Daños a plataforma en construcción por robo y vandalismo"),
   Valor = c(50, 300, 125, 50, 30, 300, 25, 180),
-  Perdida = c(16.4, 86.6, 18.1, 29.8, 4.8, 28.9, 8.9, 32)
+  Perdida = c(16.4, 86.6, 18.1, 29.8, 4.8, 28.9, 8.9, 32.4)
 )
 
 ```
@@ -403,7 +403,7 @@ donde $\psi(x)$ es la función digamma.
 
 Y procedemos a calcular el punto crítico numéricamente.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 # Estimación por máxima verosimilitud
 
 funcObj <- function(x) {
@@ -438,24 +438,27 @@ Por lo tanto el estimador de máxima verosimilitud es $\hat{\theta} = `r theta`$
 ks.test(datosSeveridad$severidad, "pbeta", theta, 5)
 
 ```
-
-   iii) Si la Aseguradora cobra una prima de riesgo de 20% sobre el valor esperado de las pérdidas, ¿cuál es la probabilidad de que pierda dinero en un año? [5]
-
-```{r}
-# Probabilidad de que pierda dinero en un año
-
-```
    
    iii) Si se presenta un nuevo siniestro al amparo de esta póliza en una obra en construcción con valor de 200 millones de dólares, ¿cuál es la esperanza y varianza del monto de la pérdida? [5]
+
+```{r}
+# Esperanza y varianza del monto de la pérdida
+esperanza <- 200*theta/(5+theta)
+varianza <- 200^2*theta*5/(((5+theta)^2)*(6+theta))
+
+```
+
+En este caso tenemos que la variable aleatoria que modela la pérdida es $Z = 200X$, donde $X \sim \text{Beta}(`r theta`, 5)$.
+Y por lo tanto tenemos que la esperanza y varianza del monto de la pérdida son: $E[Z] = `r esperanza`$ y $\text{Var}[Z] = `r varianza`$.
+
 
 # Ejercicio 5
 
 Modelo de riesgo individual para vida. El modelo de riesgo individual se desarrolló originalmente para el seguro de vida. Suponga que la probabilidad de muerte dentro de un año es $q_j$ y que el seguro paga a la muerte de la j-ésima persona un beneficio fijo $b_j$. Si la distribución de pérdidas para la j-ésima póliza es 
 
-$$X_j = \begin{cases} 
-0 & \text{si } x = 0 \\
-b_j & \text{si } x = q_j 
-\end{cases}$$
+
+$$f_{X_{j}}(x) = \begin{cases} 1 - q_{j} & \text{si } x = 0, \\q_{j} & \text{si } x = b_{j}, \\0 & \text{en otros casos.}\end{cases}$$
+
 
 la muerte de cada asegurado es independiente de las demás y $S = \sum_{j=1}^n X_j$ ...
 
@@ -463,13 +466,64 @@ a) Demuestre que $E[S] = \sum_{j=1}^n b_j q_j$ y $\text{Var}[S] = \sum_{j=1}^n b
 
 b) El dueño de un negocio manufacturero contrata una póliza de vida grupal para sus 14 empleados con las siguientes características: Si la Aseguradora cobró la prima de riesgo (valor esperado de las pérdidas agregadas) más un margen de seguridad del 45%, ajuste una distribución $\text{Lognormal}(\mu, \sigma^2)$ para aproximar la probabilidad de que pierda dinero el próximo año. (Sugerencia: Iguale esperanza y varianza de la Lognormal con esperanza y varianza del modelo de riesgo individual). [10]
 
+Supondremos que $S$ sigue una distribución lognormal, es decir, $S \sim \text{Lognormal}(\mu, \sigma^2)$, donde $\mu$ y $\sigma^2$ son los parámetros de la distribución lognormal y los estimaremos por método de momentos.
+
+Para esto notemos que la esperanza y varianza de la distribución lognormal son:
+
+$$E[S] = e^{\mu + \frac{\sigma^2}{2}}$$
+
+$$\text{Var}[S] = e^{2\mu + \sigma^2}(e^{\sigma^2} - 1)$$
+
+Procedemos a calcular numéricamente los parámetros de la distribución lognormal.
+
+```{r}
+# Crear los datos
+datos <- data.frame(
+  Empleado = 1:14,
+  Edad = c(20, 23, 27, 30, 31, 46, 47, 49, 64, 17, 22, 26, 37, 55),
+  sexo = c("M", "M", "M", "M", "M", "M", "M", "M", "M", "H", "H", "H", "H", "H"),
+  Tasa_de_mortalidad = c(0.00149, 0.00142, 0.00128, 0.00122, 0.00123, 0.00353, 0.00394, 0.00484, 0.02182, 0.00050, 0.00050, 0.00054, 0.00103, 0.00479),
+  Beneficio = c(15000, 16000, 20000, 28000, 31000, 18000, 26000, 24000, 60000, 14000, 17000, 19000, 30000, 55000)
+)
+
+datos <- datos |> 
+  mutate(espInd = Tasa_de_mortalidad*Beneficio,
+         varIndiv = Tasa_de_mortalidad*(1-Tasa_de_mortalidad)*Beneficio^2)
+
+# Calculamos la esperanza y varianza de la distribución de pérdidas agregadas
+
+esperanzaMod <- sum(datos$espInd)
+varianzaMod <- sum(datos$varIndiv)
+prima_riesgo <- esperanzaMod*1.45
+
+# Función para calcular la diferencia cuadrada entre los valores estimados y los conocidos
+error_function <- function(params) {
+  mu <- params[1]
+  sigma <- params[2]
+  
+  estimated_E_S <- mu + (sigma^2 / 2)
+  estimated_Var_S <- (2 * mu + sigma^2) * log(exp(sigma^2) - 1)
+  
+  error <- (log(esperanzaMod) - estimated_E_S)^2 + (log(varianzaMod) - estimated_Var_S)^2
+  return(error)
+}
+
+# Utiliza optim para encontrar los valores de mu y sigma
+initial_guess <- c(1, 1) 
+optim_results <- optim(initial_guess, error_function, method = "L-BFGS-B", lower = c(-20, 0.0001), upper = c(20, 20))
+
+# Los resultados
+mu <- optim_results$par[1]
+sigma <- optim_results$par[2]
+
+probabilidad2 <- stats::plnorm(prima_riesgo, mu,sigma, lower.tail = FALSE)
+```
+
+Por lo tanto tenemos que los valores  de los parámetros de la distribución de pérdidas agregadas son: $\mu = `r mu`$ y $\sigma = `r sigma`$, con las cuales estimamos que la probabilidad de que se pierda dinero el próximo año es de `r probabilidad2`.
+
 # Ejercicio 7
 
 Distribución compuesta con pérdidas Exponenciales. Considere la distribución compuesta $S = \sum_{j=1}^N X_j$ con distribuciones de pérdida individuales $X_j \sim \text{Exp}(\theta)$ y distribución de frecuencias $P(N = n) = p_n$.
-
-a) Si $N \in \{0, 1, 2, \ldots\}$, demuestre que para $s > 0$, la función de distribución de $S$ es 
-\[ F_S(s) = e^{-\theta s} \sum_{j=0}^{\infty} \frac{(s\theta)^j}{j!} \]
-donde $p_j = \sum_{n=j}^{\infty} p_n$. Calcule $F_S(s)$ para $s > 0$ si $N \in \{0, 1, 2, \ldots, m\}$. (Sugerencia: Recuerde que la función gamma incompleta se define por $\Gamma(\alpha; x) = \int_0^x t^{\alpha - 1} e^{-t} dt$ para $\alpha > 0$ y $x > 0$; y que $\Gamma(\alpha; x) = \Gamma(\alpha) - \sum_{j=0}^{\infty} \frac{x^{\alpha - j}}{j!}$ para $\alpha \in \mathbb{Z}^+$). [10]
 
 b) Suponga que $N \sim \text{Bin}(m, q)$,
    i) Calcule la función de distribución acumulada de $S$. [5]
