@@ -214,8 +214,7 @@ c) Si se quiere ajustar una distribución Geométrica modificada en cero, ¿cuá
 
 Para esto notemos que la función de verosimilitud es de la siguiente forma:
 
-$$L(p_{M},\beta)= \prod_{i=1}^{n} \left(\frac{p_{M}^{x_{i}}}{1-p_{M}^{1+\beta}}\right)$$
-
+FALTAAAA
 
 d) Considerando la Prueba Ji-Cuadrada con un nivel de significancia del 5%, ¿se pueden validar los modelos de los incisos b) y c)? Grafique los modelos ajustados. [10]
 
@@ -232,15 +231,6 @@ datosFreq <- datos_largos %>%
   group_by(value) %>%
   summarise(n = n())
 
-probModFunc <- function(x, pMod, beta) {
-if(x < kParam) {
- resultado <- actuar::dzmgeom(x,1/(1+beta), pMod)
-} else {
-  resultado <- 1-sum(sapply(0:(kParam-1), actuar::dzmgeom, prob = 1/(1+beta), p0 = pMod))
-}
-return(resultado)
-}
-
 probBinNeg <- function(x, r, beta) {
  if(x < kParam) {
    resultado <- dnbinom(x, r, 1/(1+beta))
@@ -248,6 +238,15 @@ probBinNeg <- function(x, r, beta) {
    resultado <- 1-sum(sapply(0:(kParam-1), dnbinom, size = r, prob = 1/(1+beta)))
  }
  return(resultado)
+}
+
+probModFunc <- function(x, pMod, beta) {
+if(x < kParam) {
+ resultado <- actuar::dzmgeom(x,1/(1+beta), pMod)
+} else {
+  resultado <- 1-sum(sapply(0:(kParam-1), actuar::dzmgeom, prob = 1/(1+beta), p0 = pMod))
+}
+return(resultado)
 }
 
 
@@ -269,11 +268,9 @@ frecuenciasObservadas <- sapply(0:kParam, calcFrec)
 
 # Calculamos el estadístico de prueba
 
-estadisticoPrueba1 <- sum((frecuenciasObservadas - frecuenciasEsperadas1)^2/frecuenciasEsperadas1)
+estadisticoPrueba1 <- sum(((frecuenciasObservadas - frecuenciasEsperadas1)^2)/frecuenciasEsperadas1)
 
 estadisticoPrueba2 <- sum((frecuenciasObservadas - frecuenciasEsperadas2)^2/frecuenciasEsperadas2)
-
-chisq.test(frecuenciasObservadas, p = frecuenciasEsperadas1/nTotal, rescale.p = TRUE)
 
 # Calculamos el p-value
 
@@ -300,6 +297,8 @@ ggplot(tableComp, aes(x = x)) +
   scale_color_manual(values = c("red", "green")) +
   theme()
 ```
+
+Por lo tanto el estadístico de prueba de las distribuciones binomial negativa y geométrica modificada en cero son `r estadisticoPrueba1` y `r estadisticoPrueba2` respectivamente, con lo cual tenemos que los p-values son `r pValue1` y `r pValue2` respectivamente. Por lo tanto no rechazamos la hipótesis nula de que las distribuciones binomial negativa y geométrica modificada en cero son correctas. Se valida el ajuste.
 
 
 
@@ -533,13 +532,9 @@ b) Suponga que $N \sim \text{Bin}(m, q)$,
 # Ejercicio 9
 
 Método recursivo. Considere el modelo de riesgo colectivo con la siguiente distribución de pérdidas individuales expresada en múltiplos de 20 mil dólares:
-\[ f(x) = \begin{cases} 
-0.4 & \text{si } x = 1 \\
-0.3 & \text{si } x = 2 \\
-0.2 & \text{si } x = 3 \\
-0.1 & \text{si } x = 4 \\
-0   & \text{en otros casos}
-\end{cases} \]
+
+$$f(x) = \begin{cases} 0.4 & \text{si } x = 1 \\0.3 & \text{si } x = 2 \\0.2 & \text{si } x = 3 \\0.1 & \text{si } x = 4 \\0   & \text{en otros casos}\end{cases}$$
+
 Utilice el método recursivo para responder las siguientes preguntas:
 
 a) Si la distribución de pérdidas agregadas es Poisson Compuesta con $\lambda = 3$, calcule la probabilidad de que el total de pérdidas sea mayor a 50 mil dólares. [5]
@@ -551,9 +546,7 @@ b) Si la distribución de frecuencias es Binomial Negativa con $r = 6$ y $\beta 
 
 Modelo de ruina en tiempo discreto. El total de reclamaciones pagadas por una Aseguradora en un año (en millones de dólares) pueden ser 0, 5, 10, 15 o 20 con probabilidades 0.4, 0.3, 0.15, 0.1 y 0.05, respectivamente. La prima anual es de 6 millones de dólares y se recibe al inicio de cada año. La tasa de interés anual es de 10% aplicable a cualquier cantidad disponible al inicio del año y las reclamaciones se pagan al final del año.
 
-a) Si la Aseguradora cuenta con un capital inicial de 2 millones de dólares, ¿cuál es la probabilidad de que sobreviva al tercer año de operaciones? [10]
-
-```{r}
+```{r, message=FALSE, warning=FALSE}
 i=0.1
 prima <- 6
 uExcedFunc  <- function(uAnterior, posibHipo) {
@@ -604,7 +597,24 @@ probabilidad <- (sum(df$probSinRuina))
 return(1-probabilidad)
 }
 
+valoresProbRuina <- sapply(seq(14,15,.001), probFuncRuina)
+tibble <- tibble(valoresProbRuina= valoresProbRuina, uInicial = seq(14,15,.001))
+
+
+# Asumiendo que tu tibble se llama tibble y la columna se llama valoresProbRuina
+capitalInicialMin <- tibble |> 
+                     filter(valoresProbRuina <= 0.05) |>
+                     slice_max(order_by = desc(uInicial), n = 1) |> 
+                     pull(uInicial)
 
 ```
 
+
+
+a) Si la Aseguradora cuenta con un capital inicial de 2 millones de dólares, ¿cuál es la probabilidad de que sobreviva al tercer año de operaciones? [10]
+
+La probabilidad de que sobreviva al tercer año de operaciones es de `r probabilidad`.
+
 b) ¿Cuál es el capital inicial mínimo que debe tener la Aseguradora para lograr que su probabilidad de ruina al tercer año sea menor o igual a 5%? [10]
+
+El capital inicial mínimo que debe tener la Aseguradora para lograr que su probabilidad de ruina al tercer año sea menor o igual a 5% es de `r capitalInicialMin`.
