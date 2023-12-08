@@ -437,6 +437,8 @@ Por lo tanto el estimador de máxima verosimilitud es $\hat{\theta} = `r theta`$
 ks.test(datosSeveridad$severidad, "pbeta", theta, 5)
 
 ```
+
+Es decir, no se rechaza la hipótesis nula de que la distribución $\text{Beta}(\hat{\theta}, 5)$ es correcta. Se valida el ajuste.
    
    iii) Si se presenta un nuevo siniestro al amparo de esta póliza en una obra en construcción con valor de 200 millones de dólares, ¿cuál es la esperanza y varianza del monto de la pérdida? [5]
 
