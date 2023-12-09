@@ -555,8 +555,43 @@ Distribución compuesta con pérdidas Exponenciales. Considere la distribución 
 
 b) Suponga que $N \sim \text{Bin}(m, q)$,
    i) Calcule la función de distribución acumulada de $S$. [5]
-   ii) Si $m = 10$, $q = 0.2$ y $\theta = 5$, calcule $P\left(S > \sigma^2[E[S] + S]\right)$. [5]
+
+Por ejercicio (a) tenemos lo siguiente:
+
+$$F_{s}(s)=\mathbb{I}_{\{0\}}(s)(1-q)^{m} + \left[1- e^{-\frac{s}{\theta}}\sum_{n=1}^{m}q^{n}(1-q)^{m-n}\sum_{j=0}^{n-1}\frac{1}{j!}\left(\frac{s}{\theta}\right)^{j} \right]\mathbb{I}_{(0,\infty)}(s)$$
+
+   ii) Si $m = 10$, $q = 0.2$ y $\theta = 5$, calcule $P\left(S > E[S] + 2\sigma[S]\right)$. [5]
+
+Eso es lo mismo que calcular $1-F_{s}(E[S] + 2\sigma[S])$ el cual procedemos a calcularlo numéricamente.
+
+```{r}
+# Calculamos la esperanza y varianza de la distribución de pérdidas agregadas
+
+esperanzaS <- (10*0.2)*5
+varianzaS <- (10*0.2)*25 + (10*0.2*(1-0.2))*25
+
+# Calculamos la probabilidad
+
+distribucionS <- function(s) {
+  if(s == 0) {
+    resultado <- (1-0.2)^10
+  } else {
+    resultado <- 1 - exp(-s/5)*sum(choose(10,1:10)*0.2^(1:10)*(1-0.2)^(10-(1:10))*sapply(0:(10-1), function(x) sum(((s/5)^(0:x))/factorial((0:x)))))
+  }
+  return(resultado)
+}
+
+probabilidad <- 1 - distribucionS(esperanzaS + 2*sqrt(varianzaS))
+
+```
+
+Por lo tanto la probabilidad de que $S > E[S] + 2\sigma[S]$ es de `r probabilidad`.
+
    iii) Obtenga la aproximación Normal de la probabilidad del inciso anterior. ¿Qué tan precisa es? ¿Es posible aplicar el ajuste de Yate? Justifique brevemente su respuesta. [5]
+
+Para esto notemos que $P(S>E[S] + 2\sigma[S]) \approx 1- \Phi(2)$ y por lo tanto tenemos que la probabilidad es de `r 1 - pnorm(2)`., es decir, tenemos una sibestimación de la probabilidad exacta en casi la mitad de lo que debería de ser. Sí sería posible aplicar el ajuste de Yate dado que es una distribución mixta, sin embargo, se observa que no hay forma de solucionar la aproximación, ya que con el ajuste de Yate se obtiene `r 1 - pnorm(2+ 0.5/sqrt(varianzaS)) ` lo cual es aún más alejado de la probabilidad exacta.
+
+
 
 # Ejercicio 9
 
@@ -568,7 +603,12 @@ Utilice el método recursivo para responder las siguientes preguntas:
 
 a) Si la distribución de pérdidas agregadas es Poisson Compuesta con $\lambda = 3$, calcule la probabilidad de que el total de pérdidas sea mayor a 50 mil dólares. [5]
 
+```{r}
+
+```
+
 b) Si la distribución de frecuencias es Binomial Negativa con $r = 6$ y $\beta = 0.5$, calcule e interprete al VaR 95% de la distribución de pérdidas agregadas. [15]
+
 
 
 # Ejercicio 11
