@@ -212,24 +212,60 @@ Por lo tanto los estimadores de máxima verosimilitud son $r = `r rRoot`$ y $\be
 
 c) Si se quiere ajustar una distribución Geométrica modificada en cero, ¿cuáles son los EMV de $p_M$ y $\beta$? [10]
 
-Para esto notemos que la función de verosimilitud es de la siguiente forma:
+Para calcularlo recurriremos a un teorema visto en clase el cual nos dice los EMV de las distribuciones Modificadas de la $\text{Clase}(a,b,1)$. Con lo cual en este caso tendríamos el EMV  de $\hat{p}_{0}^{M}=\frac{n_{0}}{n}$ y el EMV de $\hat{\beta}$ es calculado maximizando lo siguiente:
 
-FALTAAAA
+$$\sum_{k=1}^{\infty}[\ln(p_{k})-\ln(1-p_{0})]$$
+
+El cual es equivalente a maximizar lo siguiente:
+
+\begin{align*}
+&\sum_{k=1}^{\infty}n_{k}\left[k\ln \left( \frac{\beta}{1+\beta} \right)-\ln(1+\beta)  -\ln \left(\frac{\beta}{1+\beta}\right)\right] = \\
+&\sum_{k=1}^{\infty}n_{k}\left[(k-1)\ln \left( \beta \right)-k \ln(1+\beta) \right]
+\end{align*}
+
+De donde procedemos a derivar con respecto a $\beta$ para encontrar las CPO y obtener el máximo:
+
+$$\frac{\partial \ln L(\beta)}{\partial \beta}=\sum_{k=1}^{\infty}n_{k}\left[\frac{(k-1)}{\beta}-\frac{k}{1+\beta}\right]=0$$
+
+De lo cual obtenemos que la $\beta$ que cumple la expresión anterior es la siguiente:
+
+$$\hat{\beta} = \frac{\sum_{k=1}^{\infty}kn_{k}}{\sum_{k=1}^{\infty}n_{k}} - 1$$
+
+Procedemos a calcularlo numéricamente.
+
+```{r}
+
+kParam <- max(datos_largos$value)
+
+
+datosFreq <- datos_largos %>% 
+  group_by(value) %>%
+  summarise(n = n())
+
+nTotal <- nrow(datos_largos)
+pMod <- 1/3
+calcFrec <- function(x) {
+  if(x %in% datosFreq$value) {
+    resultado <-  pull(datosFreq[datosFreq$value == x, "n"])
+  } else {
+    resultado <- 0
+  }
+  return(resultado)
+}
+
+frecuenciasObservadas <- sapply(0:kParam, calcFrec)
+beta2 <- sum(frecuenciasObservadas[-1]*(1:kParam))/sum(frecuenciasObservadas[-1]) - 1
+
+```
+
+Por lo tanto los estimadores de máxima verosimilitud son $p_{0}^{M} = `r pMod`$ y $\beta = `r beta2`$.
 
 d) Considerando la Prueba Ji-Cuadrada con un nivel de significancia del 5%, ¿se pueden validar los modelos de los incisos b) y c)? Grafique los modelos ajustados. [10]
 
 ```{r}
 # Calculamos las frecuencias esperadas
 qParam <- 2
-kParam <- max(datos_largos$value)
 gradosLibertad <- kParam - qParam
-pMod <- 1/3
-beta2 <- 79/40
-nTotal <- nrow(datos_largos)
-
-datosFreq <- datos_largos %>% 
-  group_by(value) %>%
-  summarise(n = n())
 
 probBinNeg <- function(x, r, beta) {
  if(x < kParam) {
@@ -255,16 +291,7 @@ frecuenciasEsperadas1 <- sapply(0:kParam, probBinNeg, r = rRoot, beta = beta)*nT
 
 frecuenciasEsperadas2 <- sapply(0:kParam, probModFunc, pMod = pMod, beta = beta2)*nTotal
 
-calcFrec <- function(x) {
-  if(x %in% datosFreq$value) {
-    resultado <-  pull(datosFreq[datosFreq$value == x, "n"])
-  } else {
-    resultado <- 0
-  }
-  return(resultado)
-}
 
-frecuenciasObservadas <- sapply(0:kParam, calcFrec)
 
 # Calculamos el estadístico de prueba
 
@@ -495,7 +522,7 @@ datos <- datos |>
 
 esperanzaMod <- sum(datos$espInd)
 varianzaMod <- sum(datos$varIndiv)
-prima_riesgo <- esperanzaMod*1.45
+prima_riesgo <-  esperanzaMod*1.45
 
 # Función para calcular la diferencia cuadrada entre los valores estimados y los conocidos
 error_function <- function(params) {
@@ -503,7 +530,7 @@ error_function <- function(params) {
   sigma <- params[2]
   
   estimated_E_S <- mu + (sigma^2 / 2)
-  estimated_Var_S <- (2 * mu + sigma^2) * log(exp(sigma^2) - 1)
+  estimated_Var_S <- (2 * mu + sigma^2) + log(exp(sigma^2) - 1)
   
   error <- (log(esperanzaMod) - estimated_E_S)^2 + (log(varianzaMod) - estimated_Var_S)^2
   return(error)
@@ -602,8 +629,6 @@ return(1-probabilidad)
 valoresProbRuina <- sapply(seq(14,15,.001), probFuncRuina)
 tibble <- tibble(valoresProbRuina= valoresProbRuina, uInicial = seq(14,15,.001))
 
-
-# Asumiendo que tu tibble se llama tibble y la columna se llama valoresProbRuina
 capitalInicialMin <- tibble |> 
                      filter(valoresProbRuina <= 0.05) |>
                      slice_max(order_by = desc(uInicial), n = 1) |> 
