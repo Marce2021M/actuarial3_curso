@@ -4105,12 +4105,6 @@ alternative hypothesis: two-sided</code></pre>
 <li>Obtenga la aproximación Normal de la probabilidad del inciso anterior. ¿Qué tan precisa es? ¿Es posible aplicar el ajuste de Yate? Justifique brevemente su respuesta. [5]</li>
 </ol>
 <p>Para esto notemos que <span class="math inline">\(P(S&gt;E[S] + 2\sigma[S]) \approx 1- \Phi(2)\)</span> y por lo tanto tenemos que la probabilidad es de 0.0227501., es decir, tenemos una sibestimación de la probabilidad exacta en casi la mitad de lo que debería de ser. Sí sería posible aplicar el ajuste de Yate dado que es una distribución mixta, sin embargo, se observa que no hay forma de solucionar la aproximación, ya que con el ajuste de Yate se obtiene 0.0200506 lo cual es aún más alejado de la probabilidad exacta.</p>
-<div class="cell">
-<details>
-<summary>Código</summary>
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Aproximación Normal</span></span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
-</div>
 </section>
 <section id="ejercicio-9" class="level1">
 <h1>Ejercicio 9</h1>
@@ -4118,9 +4112,94 @@ alternative hypothesis: two-sided</code></pre>
 <p><span class="math display">\[f(x) = \begin{cases} 0.4 &amp; \text{si } x = 1 \\0.3 &amp; \text{si } x = 2 \\0.2 &amp; \text{si } x = 3 \\0.1 &amp; \text{si } x = 4 \\0   &amp; \text{en otros casos}\end{cases}\]</span></p>
 <p>Utilice el método recursivo para responder las siguientes preguntas:</p>
 <ol type="a">
-<li><p>Si la distribución de pérdidas agregadas es Poisson Compuesta con <span class="math inline">\(\lambda = 3\)</span>, calcule la probabilidad de que el total de pérdidas sea mayor a 50 mil dólares. [5]</p></li>
-<li><p>Si la distribución de frecuencias es Binomial Negativa con <span class="math inline">\(r = 6\)</span> y <span class="math inline">\(\beta = 0.5\)</span>, calcule e interprete al VaR 95% de la distribución de pérdidas agregadas. [15]</p></li>
+<li>Si la distribución de pérdidas agregadas es Poisson Compuesta con <span class="math inline">\(\lambda = 3\)</span>, calcule la probabilidad de que el total de pérdidas sea mayor a 50 mil dólares. [5]</li>
 </ol>
+<p>Para la distribución Poisson compuesta tenemos que la distribución de pérdidas agregadas se calcula recursivamente con la siguiente fórmula (haciendo el símil con el problema E45 y por teorema):</p>
+<p><span class="math display">\[P(S=k)=g_{k}=\frac{1}{1-af_{0}}\sum_{i=1}^{k}\left( a + \frac{bi}{k}\right)f_{i}g_{k-i} =\frac{\lambda}{k}\sum_{i=1}^{k}i f_{i}g_{k-i}\]</span></p>
+<p>donde <span class="math inline">\(g_{0}= P_{N}(f_{0})= e^{\lambda(f_{0}-1)}\)</span> y <span class="math inline">\(f_{k}=f(k)\)</span></p>
+<p>Con lo cual lo que buscamos se reduciría a calcular <span class="math inline">\(P(S&gt;\frac{50}{20})=1-P(S&lt;\frac{50}{20})=1-P(S\leq2)=P(S=0)+P(S=1)+P(S=2)\)</span>, es decir, <span class="math inline">\(1-P(S\leq 50)\)</span>, con lo cual procedemos a calcularlo numéricamente.</p>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>gFuncion <span class="ot">&lt;-</span> <span class="cf">function</span>(k, lambda, <span class="at">f=</span>fFuncion) {</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(k <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fu">exp</span>(lambda<span class="sc">*</span>(<span class="sc">-</span><span class="dv">1</span>))</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> (lambda<span class="sc">/</span>k)<span class="sc">*</span><span class="fu">sum</span>(<span class="dv">1</span><span class="sc">:</span>k<span class="sc">*</span><span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span>k,f)<span class="sc">*</span><span class="fu">sapply</span>((k<span class="sc">-</span>(<span class="dv">1</span><span class="sc">:</span>k)), gFuncion, <span class="at">lambda=</span>lambda))</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>fFuncion <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">1</span>) {</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.4</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">2</span>) {</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.3</span></span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">3</span>) {</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.2</span></span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">4</span>) {</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb18-20"><a href="#cb18-20" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb18-21"><a href="#cb18-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb18-22"><a href="#cb18-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb18-23"><a href="#cb18-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb18-24"><a href="#cb18-24" aria-hidden="true" tabindex="-1"></a>lambda <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<span id="cb18-25"><a href="#cb18-25" aria-hidden="true" tabindex="-1"></a>probabilidad <span class="ot">&lt;-</span><span class="dv">1</span><span class="sc">-</span> <span class="fu">gFuncion</span>(<span class="dv">0</span>,lambda)<span class="sc">-</span><span class="fu">gFuncion</span>(<span class="dv">1</span>,lambda)<span class="sc">-</span> <span class="fu">gFuncion</span>(<span class="dv">2</span>,lambda)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+</div>
+<p>Por lo tanto la probabilidad de que el total de pérdidas sea mayor a 50 mil dólares es de 0.8098134.</p>
+<ol start="2" type="a">
+<li>Si la distribución de frecuencias es Binomial Negativa con <span class="math inline">\(r = 6\)</span> y <span class="math inline">\(\beta = 0.5\)</span>, calcule e interprete al VaR 95% de la distribución de pérdidas agregadas. [15]</li>
+</ol>
+<p>Para la distribución binomial negativa tenemos que la distribución de pérdidas agregadas se calcula recursivamente con la siguiente fórmula:</p>
+<p><span class="math display">\[F_{S}(0)=\sum_{x=0}^{s}f_{S}(x)\]</span></p>
+<p>con</p>
+<p><span class="math display">\[f_{S}(x)=\frac{\sum_{y=1}^{\text{min}\{x,m\}}(a+\frac{by}{x})f_{x}(y)f_{S}(x-y)}{1-af_{x}(0)}=\]</span></p>
+<p><span class="math display">\[\frac{\sum_{y=1}^{\text{min}\{x,m\}}(\frac{\beta}{1+\beta}+\frac{(r-1)\frac{\beta}{1+\beta}y}{x})f_{x}(y)f_{S}(x-y)}{1-\frac{\beta}{1+\beta}f_{x}(0)}\]</span></p>
+<p>donde <span class="math inline">\(f_{S}(0)=P_{N}(f_{0})=\left[\frac{p}{1-(1-p)f_{0}} \right]^{r}\)</span> con <span class="math inline">\(p=1/(1+\beta)\)</span></p>
+<p>Con lo cual procedemos a buscar el cuantil 95% de la distribución de pérdidas agregadas.</p>
+<div class="cell">
+<details>
+<summary>Código</summary>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>fFuncion <span class="ot">&lt;-</span> <span class="cf">function</span>(x) {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">1</span>) {</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.4</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">2</span>) {</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.3</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">3</span>) {</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.2</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">4</span>) {</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fl">0.1</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>dFuncionS <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(x <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> ((<span class="dv">2</span><span class="sc">/</span><span class="dv">3</span>)<span class="sc">/</span>(<span class="dv">1</span><span class="sc">-</span>(<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span>)<span class="sc">*</span><span class="fu">fFuncion</span>(<span class="dv">0</span>)))<span class="sc">^</span><span class="dv">6</span></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fu">sum</span>((<span class="dv">1</span><span class="sc">/</span><span class="dv">3</span> <span class="sc">+</span> <span class="dv">5</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">min</span>(<span class="dv">4</span>,x))<span class="sc">/</span>(<span class="dv">3</span><span class="sc">*</span>x) ) <span class="sc">*</span> <span class="fu">sapply</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">min</span>(<span class="dv">4</span>,x),fFuncion) <span class="sc">*</span> <span class="fu">sapply</span>(x <span class="sc">-</span> <span class="dv">1</span><span class="sc">:</span><span class="fu">min</span>(<span class="dv">4</span>,x),dFuncionS))</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>pFuncionS <span class="ot">&lt;-</span> <span class="cf">function</span>(x){</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>  resultado <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">sapply</span>(<span class="dv">0</span><span class="sc">:</span>x,dFuncionS))</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>tibble <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">x =</span> <span class="dv">14</span><span class="sc">:</span><span class="dv">15</span>, <span class="at">pFuncionS =</span> <span class="fu">sapply</span>(<span class="dv">14</span><span class="sc">:</span><span class="dv">15</span>, pFuncionS))</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>kableExtra<span class="sc">::</span><span class="fu">kable</span>(tibble, <span class="st">&quot;latex&quot;</span>, <span class="at">booktabs =</span> <span class="cn">TRUE</span>, <span class="at">digits =</span> <span class="dv">4</span>, <span class="at">caption =</span> <span class="st">&quot;Probabilidad acumulada de la distribución de pérdidas agregadas&quot;</span>)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output-display">
+
+</div>
+</div>
+<p>Encontramos que el VaR 95% de la distribución de pérdidas agregadas es de 15, porque es el primer valor de <span class="math inline">\(x\)</span> tal que <span class="math inline">\(P(S\leq x)\geq 0.95\)</span>. Es decir, el 95% de las pérdidas es menor a <span class="math inline">\((15)(20)=300\)</span> mil dólares.</p>
 </section>
 <section id="ejercicio-11" class="level1">
 <h1>Ejercicio 11</h1>
@@ -4128,63 +4207,63 @@ alternative hypothesis: two-sided</code></pre>
 <div class="cell">
 <details>
 <summary>Código</summary>
-<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>i<span class="ot">=</span><span class="fl">0.1</span></span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>prima <span class="ot">&lt;-</span> <span class="dv">6</span></span>
-<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>uExcedFunc  <span class="ot">&lt;-</span> <span class="cf">function</span>(uAnterior, posibHipo) {</span>
-<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(uAnterior <span class="sc">&lt;</span> <span class="dv">0</span>) {</span>
-<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="sc">-</span>.<span class="dv">001</span></span>
-<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>  }<span class="cf">else</span> {</span>
-<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> (uAnterior <span class="sc">+</span> prima)<span class="sc">*</span>(<span class="dv">1</span><span class="sc">+</span>i) <span class="sc">-</span> posibHipo <span class="sc">+</span> .<span class="dv">0</span></span>
-<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
-<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>creaVectorExcedentes <span class="ot">&lt;-</span> <span class="cf">function</span>(instanciaVectorProgreso) {</span>
-<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>  posibHipo <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>)</span>
-<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>  resultado <span class="ot">&lt;-</span> <span class="fu">sapply</span>(posibHipo, uExcedFunc, <span class="at">uAnterior =</span> instanciaVectorProgreso)</span>
-<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
-<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>creaVectorProb <span class="ot">&lt;-</span> <span class="cf">function</span>(instanciaProb) {</span>
-<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    probTrans <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.4</span>, <span class="fl">0.3</span>, <span class="fl">0.15</span>, <span class="fl">0.1</span>, <span class="fl">0.05</span>)</span>
-<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fu">sapply</span>(probTrans, <span class="cf">function</span>(x) x<span class="sc">*</span>instanciaProb)</span>
-<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
-<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>procesoExc <span class="ot">&lt;-</span> <span class="cf">function</span>(uInicial, tiempo) {</span>
-<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>  vectorProgreso <span class="ot">&lt;-</span> <span class="fu">c</span>(uInicial)</span>
-<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>  vectorProb <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.00</span>)</span>
-<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>tiempo) {</span>
-<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>    vectorProgreso <span class="ot">&lt;-</span> <span class="fu">sapply</span>(vectorProgreso, creaVectorExcedentes)</span>
-<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>    vectorProgreso <span class="ot">&lt;-</span> <span class="fu">c</span>(vectorProgreso)</span>
-<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>    vectorProb <span class="ot">&lt;-</span> <span class="fu">sapply</span>(vectorProb, creaVectorProb)</span>
-<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>    vectorProb <span class="ot">&lt;-</span> <span class="fu">c</span>(vectorProb)</span>
-<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>  }</span>
-<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>  dfResults <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">proceso =</span> vectorProgreso,<span class="at">prob=</span> vectorProb)</span>
-<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(dfResults)</span>
-<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>}      </span>
-<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">procesoExc</span>(<span class="dv">2</span>,<span class="dv">3</span>)</span>
-<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
-<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">probSinRuina =</span> <span class="fu">ifelse</span>(proceso<span class="sc">&gt;=</span><span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>)<span class="sc">*</span>prob)</span>
-<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>probabilidad <span class="ot">&lt;-</span> (<span class="fu">sum</span>(df<span class="sc">$</span>probSinRuina))</span>
-<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>probFuncRuina <span class="ot">&lt;-</span> <span class="cf">function</span>(uInicial) {</span>
-<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">procesoExc</span>(uInicial,<span class="dv">3</span>)</span>
-<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
-<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">probSinRuina =</span> <span class="fu">ifelse</span>(proceso<span class="sc">&gt;=</span><span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>)<span class="sc">*</span>prob)</span>
-<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>probabilidad <span class="ot">&lt;-</span> (<span class="fu">sum</span>(df<span class="sc">$</span>probSinRuina))</span>
-<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span>(<span class="dv">1</span><span class="sc">-</span>probabilidad)</span>
-<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a>valoresProbRuina <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">seq</span>(<span class="dv">14</span>,<span class="dv">15</span>,.<span class="dv">001</span>), probFuncRuina)</span>
-<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>tibble <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">valoresProbRuina=</span> valoresProbRuina, <span class="at">uInicial =</span> <span class="fu">seq</span>(<span class="dv">14</span>,<span class="dv">15</span>,.<span class="dv">001</span>))</span>
-<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a>capitalInicialMin <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span> </span>
-<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">filter</span>(valoresProbRuina <span class="sc">&lt;=</span> <span class="fl">0.05</span>) <span class="sc">|&gt;</span></span>
-<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">slice_max</span>(<span class="at">order_by =</span> <span class="fu">desc</span>(uInicial), <span class="at">n =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span> </span>
-<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">pull</span>(uInicial)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>i<span class="ot">=</span><span class="fl">0.1</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>prima <span class="ot">&lt;-</span> <span class="dv">6</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>uExcedFunc  <span class="ot">&lt;-</span> <span class="cf">function</span>(uAnterior, posibHipo) {</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span>(uAnterior <span class="sc">&lt;</span> <span class="dv">0</span>) {</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="sc">-</span>.<span class="dv">001</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  }<span class="cf">else</span> {</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> (uAnterior <span class="sc">+</span> prima)<span class="sc">*</span>(<span class="dv">1</span><span class="sc">+</span>i) <span class="sc">-</span> posibHipo <span class="sc">+</span> .<span class="dv">0</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>creaVectorExcedentes <span class="ot">&lt;-</span> <span class="cf">function</span>(instanciaVectorProgreso) {</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  posibHipo <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>)</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  resultado <span class="ot">&lt;-</span> <span class="fu">sapply</span>(posibHipo, uExcedFunc, <span class="at">uAnterior =</span> instanciaVectorProgreso)</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>creaVectorProb <span class="ot">&lt;-</span> <span class="cf">function</span>(instanciaProb) {</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>    probTrans <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">0.4</span>, <span class="fl">0.3</span>, <span class="fl">0.15</span>, <span class="fl">0.1</span>, <span class="fl">0.05</span>)</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>    resultado <span class="ot">&lt;-</span> <span class="fu">sapply</span>(probTrans, <span class="cf">function</span>(x) x<span class="sc">*</span>instanciaProb)</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(resultado)</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>procesoExc <span class="ot">&lt;-</span> <span class="cf">function</span>(uInicial, tiempo) {</span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  vectorProgreso <span class="ot">&lt;-</span> <span class="fu">c</span>(uInicial)</span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>  vectorProb <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="fl">1.00</span>)</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>tiempo) {</span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a>    vectorProgreso <span class="ot">&lt;-</span> <span class="fu">sapply</span>(vectorProgreso, creaVectorExcedentes)</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>    vectorProgreso <span class="ot">&lt;-</span> <span class="fu">c</span>(vectorProgreso)</span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>    vectorProb <span class="ot">&lt;-</span> <span class="fu">sapply</span>(vectorProb, creaVectorProb)</span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>    vectorProb <span class="ot">&lt;-</span> <span class="fu">c</span>(vectorProb)</span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb20-33"><a href="#cb20-33" aria-hidden="true" tabindex="-1"></a>  dfResults <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">proceso =</span> vectorProgreso,<span class="at">prob=</span> vectorProb)</span>
+<span id="cb20-34"><a href="#cb20-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">return</span>(dfResults)</span>
+<span id="cb20-35"><a href="#cb20-35" aria-hidden="true" tabindex="-1"></a>}      </span>
+<span id="cb20-36"><a href="#cb20-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-37"><a href="#cb20-37" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">procesoExc</span>(<span class="dv">2</span>,<span class="dv">3</span>)</span>
+<span id="cb20-38"><a href="#cb20-38" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
+<span id="cb20-39"><a href="#cb20-39" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">probSinRuina =</span> <span class="fu">ifelse</span>(proceso<span class="sc">&gt;=</span><span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>)<span class="sc">*</span>prob)</span>
+<span id="cb20-40"><a href="#cb20-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-41"><a href="#cb20-41" aria-hidden="true" tabindex="-1"></a>probabilidad <span class="ot">&lt;-</span> (<span class="fu">sum</span>(df<span class="sc">$</span>probSinRuina))</span>
+<span id="cb20-42"><a href="#cb20-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-43"><a href="#cb20-43" aria-hidden="true" tabindex="-1"></a>probFuncRuina <span class="ot">&lt;-</span> <span class="cf">function</span>(uInicial) {</span>
+<span id="cb20-44"><a href="#cb20-44" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> <span class="fu">procesoExc</span>(uInicial,<span class="dv">3</span>)</span>
+<span id="cb20-45"><a href="#cb20-45" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> df <span class="sc">%&gt;%</span> </span>
+<span id="cb20-46"><a href="#cb20-46" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">probSinRuina =</span> <span class="fu">ifelse</span>(proceso<span class="sc">&gt;=</span><span class="dv">0</span>,<span class="dv">1</span>,<span class="dv">0</span>)<span class="sc">*</span>prob)</span>
+<span id="cb20-47"><a href="#cb20-47" aria-hidden="true" tabindex="-1"></a>probabilidad <span class="ot">&lt;-</span> (<span class="fu">sum</span>(df<span class="sc">$</span>probSinRuina))</span>
+<span id="cb20-48"><a href="#cb20-48" aria-hidden="true" tabindex="-1"></a><span class="fu">return</span>(<span class="dv">1</span><span class="sc">-</span>probabilidad)</span>
+<span id="cb20-49"><a href="#cb20-49" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-50"><a href="#cb20-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-51"><a href="#cb20-51" aria-hidden="true" tabindex="-1"></a>valoresProbRuina <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">seq</span>(<span class="dv">14</span>,<span class="dv">15</span>,.<span class="dv">001</span>), probFuncRuina)</span>
+<span id="cb20-52"><a href="#cb20-52" aria-hidden="true" tabindex="-1"></a>tibble <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">valoresProbRuina=</span> valoresProbRuina, <span class="at">uInicial =</span> <span class="fu">seq</span>(<span class="dv">14</span>,<span class="dv">15</span>,.<span class="dv">001</span>))</span>
+<span id="cb20-53"><a href="#cb20-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-54"><a href="#cb20-54" aria-hidden="true" tabindex="-1"></a>capitalInicialMin <span class="ot">&lt;-</span> tibble <span class="sc">|&gt;</span> </span>
+<span id="cb20-55"><a href="#cb20-55" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">filter</span>(valoresProbRuina <span class="sc">&lt;=</span> <span class="fl">0.05</span>) <span class="sc">|&gt;</span></span>
+<span id="cb20-56"><a href="#cb20-56" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">slice_max</span>(<span class="at">order_by =</span> <span class="fu">desc</span>(uInicial), <span class="at">n =</span> <span class="dv">1</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb20-57"><a href="#cb20-57" aria-hidden="true" tabindex="-1"></a>                     <span class="fu">pull</span>(uInicial)</span></code><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
 <ol type="a">
