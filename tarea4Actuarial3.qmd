@@ -294,7 +294,8 @@ frecuenciasEsperadas1 <- sapply(0:kParam, probBinNeg, r = rRoot, beta = beta)*nT
 frecuenciasEsperadas2 <- sapply(0:kParam, probModFunc, pMod = pMod, beta = beta2)*nTotal
 
 # Ajustamos por regla de los 5
-frecuenciasObservadas <- sapply(0:kParam, calcFrec)
+frecuenciasObservadas <- sapply(0:(kParam-1), calcFrec)
+frecuenciasObservadas <- c(frecuenciasObservadas, sum(sapply(kParam:11, calcFrec)))
 
 
 # Calculamos el estadístico de prueba
@@ -313,14 +314,18 @@ pValue2 <- 1 - pchisq(estadisticoPrueba2, gradosLibertad)
 
 # Graficamos
 table <- data.frame(
-  x = 0:kParam,
-  frecuenciasObservadas = frecuenciasObservadas
+  x = 0:11
 )
 
+
+#Volvemos a realizar ajustes para graficar
+
+
+observados <- sapply(0:11, calcFrec)
 tableComp <- table %>%
-  mutate(binom_neg = dnbinom(0:kParam, rRoot, 1/(1+beta)),
-         dzmgeom = dzmgeom(0:kParam, 1/(1+beta2), pMod),
-         prop = frecuenciasObservadas/nTotal)  
+  mutate(binom_neg = dnbinom(0:11, rRoot, 1/(1+beta)),
+         dzmgeom = dzmgeom(0:11, 1/(1+beta2), pMod),
+         prop = observados/nTotal)  
 
 ggplot(tableComp, aes(x = x)) +
   geom_col(aes(y = prop, fill = "Observado"), alpha = 0.5) +
