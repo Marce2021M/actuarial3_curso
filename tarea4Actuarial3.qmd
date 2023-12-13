@@ -265,6 +265,7 @@ d) Considerando la Prueba Ji-Cuadrada con un nivel de significancia del 5%, ¿se
 
 ```{r}
 # Calculamos las frecuencias esperadas
+kParam <- 5 # Aplicamos regla de los 5
 qParam <- 2
 gradosLibertad <- kParam - qParam
 
@@ -292,6 +293,8 @@ frecuenciasEsperadas1 <- sapply(0:kParam, probBinNeg, r = rRoot, beta = beta)*nT
 
 frecuenciasEsperadas2 <- sapply(0:kParam, probModFunc, pMod = pMod, beta = beta2)*nTotal
 
+# Ajustamos por regla de los 5
+frecuenciasObservadas <- sapply(0:kParam, calcFrec)
 
 
 # Calculamos el estadístico de prueba
